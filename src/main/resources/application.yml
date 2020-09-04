@@ -1,0 +1,2 @@
+services:
+  userUrl: http://user-service/user/
