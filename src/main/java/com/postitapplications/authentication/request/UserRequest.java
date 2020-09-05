@@ -1,7 +1,9 @@
 package com.postitapplications.authentication.request;
 
+import com.postitapplications.authentication.configuration.ExternalServiceProperties;
 import com.postitapplications.user.document.User;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -11,16 +13,19 @@ import org.springframework.web.client.RestTemplate;
 public class UserRequest {
 
     private final RestTemplate restTemplate;
-    private final Environment environment;
+    private final ExternalServiceProperties externalServiceProperties;
 
-    public UserRequest(RestTemplate restTemplate, Environment environment) {
-        this.restTemplate = restTemplate;
-        this.environment = environment;
+    @Autowired
+    public UserRequest(RestTemplateBuilder restTemplateBuilder,
+        ExternalServiceProperties externalServiceProperties) {
+        this.restTemplate = restTemplateBuilder.build();
+        this.externalServiceProperties = externalServiceProperties;
     }
 
     public User getUserByUsername(String username) {
         ResponseEntity<User> responseEntity = restTemplate
-            .getForEntity(environment.getProperty("userUrl") + "/username/" + username, User.class);
+            .getForEntity(externalServiceProperties.getUserUrl() + "/username/" + username,
+                User.class);
 
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
             return responseEntity.getBody();
