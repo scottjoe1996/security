@@ -2,12 +2,15 @@ package com.postitapplications.authentication.security;
 
 import com.postitapplications.authentication.document.MongoUserDetails;
 import com.postitapplications.authentication.request.UserRequest;
+import com.postitapplications.exception.exceptions.UserNotAuthorised;
 import com.postitapplications.exception.exceptions.UserNotFoundException;
 import com.postitapplications.user.document.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 
 @Component
 public class UserDetailsProvider implements UserDetailsService {
@@ -19,10 +22,12 @@ public class UserDetailsProvider implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRequest.getUserByUsername(username);
-        if (user == null) {
-            throw new UserNotFoundException(
-                String.format("User with username %s was not found", username));
+        User user;
+        try {
+            user = userRequest.getUserByUsername(username);
+        } catch (HttpClientErrorException exception) {
+            throw new UserNotAuthorised(String.format("%s failed to authorise with error: %s",
+                username, exception.getResponseBodyAsString()));
         }
 
         String[] authorities = getUserAuthorities(user);
@@ -32,6 +37,6 @@ public class UserDetailsProvider implements UserDetailsService {
     }
 
     private String[] getUserAuthorities(User user) {
-        return new String[] {user.getId().toString()};
+        return new String[] {"ROLE_" + user.getId().toString()};
     }
 }

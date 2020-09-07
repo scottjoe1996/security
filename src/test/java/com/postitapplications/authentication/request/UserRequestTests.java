@@ -1,8 +1,10 @@
 package com.postitapplications.authentication.request;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
+import org.springframework.web.client.HttpClientErrorException;
 
 @ExtendWith(SpringExtension.class)
 @RestClientTest(UserRequest.class)
@@ -41,7 +44,7 @@ public class UserRequestTests {
 
     @Test
     public void getUserByUsernameShouldReturnUserOnSuccessfulResponse() {
-        this.mockServer.expect(requestTo("http://user-service/user/username/johnSmith123"))
+        mockServer.expect(requestTo("http://user-service/user/username/johnSmith123"))
                        .andRespond(withSuccess(userAsString, MediaType.APPLICATION_JSON));
 
         User response = userRequest.getUserByUsername("johnSmith123");
@@ -51,13 +54,12 @@ public class UserRequestTests {
     }
 
     @Test
-    public void getUserByUsernameShouldReturnNullAllNonSuccessfulResponses() {
-        this.mockServer.expect(requestTo("http://user-service/user/username/fakeUsername"))
-                       .andRespond(MockRestResponseCreators.withStatus(HttpStatus.CREATED),
-                           MediaType.APPLICATION_JSON);
+    public void getUserByUsernameShouldThrowErrorOnAllNonSuccessfulResponses() {
+        mockServer.expect(requestTo("http://user-service/user/username/fakeUsername"))
+                  .andRespond(withStatus(HttpStatus.BAD_REQUEST));
 
-        User response = userRequest.getUserByUsername("fakeUsername");
-
-        assertThat(response.getUsername()).isEqualTo(null);
+        assertThrows(HttpClientErrorException.class, () -> {
+            userRequest.getUserByUsername("fakeUsername");
+        });
     }
 }
