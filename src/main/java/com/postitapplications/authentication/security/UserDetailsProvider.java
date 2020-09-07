@@ -3,14 +3,12 @@ package com.postitapplications.authentication.security;
 import com.postitapplications.authentication.document.MongoUserDetails;
 import com.postitapplications.authentication.request.UserRequest;
 import com.postitapplications.exception.exceptions.UserNotAuthorised;
-import com.postitapplications.exception.exceptions.UserNotFoundException;
 import com.postitapplications.user.document.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClientException;
 
 @Component
 public class UserDetailsProvider implements UserDetailsService {
@@ -30,6 +28,10 @@ public class UserDetailsProvider implements UserDetailsService {
                 username, exception.getResponseBodyAsString()));
         }
 
+        return getUserDetails(user);
+    }
+
+    private MongoUserDetails getUserDetails(User user) {
         String[] authorities = getUserAuthorities(user);
 
         return new MongoUserDetails(user.getUsername(),
