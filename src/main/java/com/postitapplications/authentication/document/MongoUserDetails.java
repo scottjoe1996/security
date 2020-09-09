@@ -10,13 +10,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 @JsonDeserialize(as = MongoUserDetails.class)
 public class MongoUserDetails implements UserDetails {
 
-    private String username;
-    private String password;
-    private Integer active;
-    private boolean isLocked;
-    private boolean isExpired;
-    private boolean isEnabled;
-    private List<GrantedAuthority> grantedAuthorities;
+    private final String username;
+    private final String password;
+    private final Integer active;
+    private final boolean isLocked;
+    private final boolean isExpired;
+    private final boolean isEnabled;
+    private final List<GrantedAuthority> grantedAuthorities;
 
     public MongoUserDetails(String username, String password,Integer active, boolean isLocked, boolean isExpired, boolean isEnabled, String [] authorities) {
         this.username = username;

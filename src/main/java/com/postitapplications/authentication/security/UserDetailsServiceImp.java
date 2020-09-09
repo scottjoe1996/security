@@ -7,14 +7,14 @@ import com.postitapplications.user.document.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
-@Component
-public class UserDetailsProvider implements UserDetailsService {
+@Service
+public class UserDetailsServiceImp implements UserDetailsService {
     private final UserRequest userRequest;
 
-    public UserDetailsProvider(UserRequest userRequest) {
+    public UserDetailsServiceImp(UserRequest userRequest) {
         this.userRequest = userRequest;
     }
 

@@ -5,10 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import com.postitapplications.authentication.request.UserRequest;
-import com.postitapplications.exception.ExceptionResponseBody;
 import com.postitapplications.exception.exceptions.UserNotAuthorised;
 import com.postitapplications.user.document.User;
-import java.nio.charset.Charset;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,8 +17,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.client.HttpClientErrorException;
 
 @ExtendWith(SpringExtension.class)
-public class UserDetailsProviderTests {
-    private UserDetailsProvider userDetailsProvider;
+public class UserDetailsServiceImpTests {
+    private UserDetailsServiceImp userDetailsServiceImp;
     @MockBean
     private UserRequest mockUserRequest;
 
@@ -29,9 +27,9 @@ public class UserDetailsProviderTests {
         UUID userId = UUID.randomUUID();
         when(mockUserRequest.getUserByUsername("johnSmith123"))
             .thenReturn(new User(userId, "johnSmith123", "password"));
-        userDetailsProvider = new UserDetailsProvider(mockUserRequest);
+        userDetailsServiceImp = new UserDetailsServiceImp(mockUserRequest);
 
-        UserDetails userDetails = userDetailsProvider.loadUserByUsername("johnSmith123");
+        UserDetails userDetails = userDetailsServiceImp.loadUserByUsername("johnSmith123");
 
         assertThat(userDetails.getUsername()).isEqualTo("johnSmith123");
         assertThat(userDetails.getPassword()).isEqualTo("password");
@@ -46,10 +44,10 @@ public class UserDetailsProviderTests {
     public void loadUserByUsernameShouldThrowUserNotAuthorisedException() {
         when(mockUserRequest.getUserByUsername("fakeUsername123")).thenThrow(new HttpClientErrorException(
             HttpStatus.NOT_FOUND));
-        userDetailsProvider = new UserDetailsProvider(mockUserRequest);
+        userDetailsServiceImp = new UserDetailsServiceImp(mockUserRequest);
 
         Exception exception = assertThrows(UserNotAuthorised.class, () -> {
-            userDetailsProvider.loadUserByUsername("fakeUsername123");
+            userDetailsServiceImp.loadUserByUsername("fakeUsername123");
         });
 
         assertThat(exception.getMessage()).isEqualTo("fakeUsername123 failed to authorise with error: ");
