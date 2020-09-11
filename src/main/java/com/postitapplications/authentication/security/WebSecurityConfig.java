@@ -2,43 +2,45 @@ package com.postitapplications.authentication.security;
 
 import com.postitapplications.authentication.configuration.JwtProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private final UserDetailsService userDetailsService;
-
+    private final UserDetailsServiceImp userDetailsService;
+    private final BCryptPasswordEncoder passwordEncoder;
     private final JwtProperties jwtProperties;
 
     public WebSecurityConfig(UserDetailsServiceImp userDetailsService,
-        JwtProperties jwtProperties) {
+        BCryptPasswordEncoder passwordEncoder, JwtProperties jwtProperties) {
         this.userDetailsService = userDetailsService;
+        this.passwordEncoder = passwordEncoder;
         this.jwtProperties = jwtProperties;
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        super.configure(http);
+        http.cors()
+            .and()
+                .csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+                .authorizeRequests()
+                .antMatchers(HttpMethod.POST, jwtProperties.getUri()).permitAll()
+                .anyRequest().authenticated()
+            .and()
+                .addFilter(new JwtAuthenticationFilter(authenticationManager(), jwtProperties))
+                .addFilter(new JwtAuthorizationFilter(authenticationManager(), jwtProperties));
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        super.configure(auth);
-    }
-
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public JwtProperties jwtProperties() {
-        return new JwtProperties();
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
     }
 }

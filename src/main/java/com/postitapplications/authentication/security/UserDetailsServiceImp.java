@@ -2,7 +2,6 @@ package com.postitapplications.authentication.security;
 
 import com.postitapplications.authentication.document.MongoUserDetails;
 import com.postitapplications.authentication.request.UserRequest;
-import com.postitapplications.exception.exceptions.UserNotAuthorised;
 import com.postitapplications.user.document.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -24,8 +23,9 @@ public class UserDetailsServiceImp implements UserDetailsService {
         try {
             user = userRequest.getUserByUsername(username);
         } catch (HttpClientErrorException exception) {
-            throw new UserNotAuthorised(String.format("%s failed to authorise with error: %s",
-                username, exception.getResponseBodyAsString()));
+            throw new UsernameNotFoundException(String
+                .format("%s failed to authorise with error: %s", username,
+                    exception.getResponseBodyAsString()));
         }
 
         return getUserDetails(user);
@@ -34,8 +34,8 @@ public class UserDetailsServiceImp implements UserDetailsService {
     private MongoUserDetails getUserDetails(User user) {
         String[] authorities = getUserAuthorities(user);
 
-        return new MongoUserDetails(user.getUsername(),
-            user.getPassword(), 1, false, false, true, authorities);
+        return new MongoUserDetails(user.getUsername(), user.getPassword(), 1, false, false, true,
+            authorities);
     }
 
     private String[] getUserAuthorities(User user) {

@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import com.postitapplications.authentication.request.UserRequest;
-import com.postitapplications.exception.exceptions.UserNotAuthorised;
 import com.postitapplications.user.document.User;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -46,7 +46,7 @@ public class UserDetailsServiceImpTests {
             HttpStatus.NOT_FOUND));
         userDetailsServiceImp = new UserDetailsServiceImp(mockUserRequest);
 
-        Exception exception = assertThrows(UserNotAuthorised.class, () -> {
+        Exception exception = assertThrows(UsernameNotFoundException.class, () -> {
             userDetailsServiceImp.loadUserByUsername("fakeUsername123");
         });
 
