@@ -29,14 +29,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors()
             .and()
                 .csrf().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            .and()
                 .authorizeRequests()
                 .antMatchers(HttpMethod.POST, jwtProperties.getUri()).permitAll()
                 .anyRequest().authenticated()
             .and()
                 .addFilter(new JwtAuthenticationFilter(authenticationManager(), jwtProperties))
-                .addFilter(new JwtAuthorizationFilter(authenticationManager(), jwtProperties));
+                .addFilter(new JwtAuthorizationFilter(authenticationManager(), jwtProperties))
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 
     @Override
