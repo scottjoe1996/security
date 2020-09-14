@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.postitapplications</groupId>
-	<artifactId>authentication</artifactId>
+	<artifactId>security</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>authentication</name>
-	<description>The authentication domain handles the creation and validation of JWTs which allows user to access the pace service</description>
+	<name>security</name>
+	<description>The security domain handles the creation and validation of JWTs which allows user to access the pace service</description>
 
 	<properties>
 		<java.version>14</java.version>
@@ -45,8 +45,7 @@
 		<dependency>
 			<groupId>javax.xml.bind</groupId>
 			<artifactId>jaxb-api</artifactId>
-			<version>2.1</version>
-		</dependency>
+			<version>2.1</version></dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

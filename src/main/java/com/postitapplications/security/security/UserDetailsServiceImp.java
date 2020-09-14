@@ -1,7 +1,7 @@
-package com.postitapplications.authentication.security;
+package com.postitapplications.security.security;
 
-import com.postitapplications.authentication.document.MongoUserDetails;
-import com.postitapplications.authentication.request.UserRequest;
+import com.postitapplications.security.document.MongoUserDetails;
+import com.postitapplications.security.request.UserRequest;
 import com.postitapplications.user.document.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

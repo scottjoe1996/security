@@ -1,4 +1,4 @@
-package com.postitapplications.authentication.configuration;
+package com.postitapplications.security.configuration;
 
 import javax.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;

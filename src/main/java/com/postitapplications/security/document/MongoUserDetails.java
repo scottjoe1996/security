@@ -1,4 +1,4 @@
-package com.postitapplications.authentication.document;
+package com.postitapplications.security.document;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Collection;

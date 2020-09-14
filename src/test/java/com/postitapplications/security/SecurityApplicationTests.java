@@ -1,10 +1,10 @@
-package com.postitapplications.authentication;
+package com.postitapplications.security;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class AuthenticationApplicationTests {
+class SecurityApplicationTests {
 
 	@Test
 	void contextLoads() {

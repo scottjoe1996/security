@@ -1,10 +1,10 @@
-package com.postitapplications.authentication.security;
+package com.postitapplications.security.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
-import com.postitapplications.authentication.request.UserRequest;
+import com.postitapplications.security.request.UserRequest;
 import com.postitapplications.user.document.User;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;

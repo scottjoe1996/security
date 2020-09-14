@@ -1,4 +1,4 @@
-package com.postitapplications.authentication.configuration;
+package com.postitapplications.security.configuration;
 
 import org.springframework.beans.factory.annotation.Value;
 

@@ -1,7 +1,7 @@
-package com.postitapplications.authentication.security;
+package com.postitapplications.security.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.postitapplications.authentication.configuration.JwtProperties;
+import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.user.document.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

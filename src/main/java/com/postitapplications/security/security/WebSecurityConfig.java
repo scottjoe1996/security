@@ -1,7 +1,6 @@
-package com.postitapplications.authentication.security;
+package com.postitapplications.security.security;
 
-import com.postitapplications.authentication.configuration.JwtProperties;
-import org.springframework.context.annotation.Bean;
+import com.postitapplications.security.configuration.JwtProperties;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

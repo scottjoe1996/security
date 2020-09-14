@@ -1,4 +1,4 @@
-package com.postitapplications.authentication.request;
+package com.postitapplications.security.request;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -8,7 +8,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.postitapplications.authentication.configuration.TestConfig;
+import com.postitapplications.security.configuration.TestConfig;
 import com.postitapplications.user.document.User;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

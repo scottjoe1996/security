@@ -1,4 +1,4 @@
-package com.postitapplications.authentication.configuration;
+package com.postitapplications.security.configuration;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -10,7 +10,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @EnableConfigurationProperties(ExternalServiceProperties.class)
-public class AuthenticationConfig {
+public class SecurityConfig {
 
     @Bean
     @LoadBalanced

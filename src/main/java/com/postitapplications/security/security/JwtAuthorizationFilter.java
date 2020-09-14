@@ -1,6 +1,6 @@
-package com.postitapplications.authentication.security;
+package com.postitapplications.security.security;
 
-import com.postitapplications.authentication.configuration.JwtProperties;
+import com.postitapplications.security.configuration.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import java.io.IOException;
