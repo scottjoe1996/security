@@ -1,4 +1,4 @@
-package com.postitapplications.security.security;
+package com.postitapplications.security.Filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.postitapplications.security.configuration.JwtProperties;

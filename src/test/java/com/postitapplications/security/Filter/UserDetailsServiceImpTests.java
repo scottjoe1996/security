@@ -1,4 +1,4 @@
-package com.postitapplications.security.security;
+package com.postitapplications.security.Filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;

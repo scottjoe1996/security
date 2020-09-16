@@ -7,8 +7,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 
-@JsonDeserialize(as = MongoUserDetails.class)
-public class MongoUserDetails implements UserDetails {
+@JsonDeserialize(as = SecurityUserDetails.class)
+public class SecurityUserDetails implements UserDetails {
 
     private final String username;
     private final String password;
@@ -18,7 +18,7 @@ public class MongoUserDetails implements UserDetails {
     private final boolean isEnabled;
     private final List<GrantedAuthority> grantedAuthorities;
 
-    public MongoUserDetails(String username, String password,Integer active, boolean isLocked, boolean isExpired, boolean isEnabled, String [] authorities) {
+    public SecurityUserDetails(String username, String password,Integer active, boolean isLocked, boolean isExpired, boolean isEnabled, String [] authorities) {
         this.username = username;
         this.password = password;
         this.active = active;

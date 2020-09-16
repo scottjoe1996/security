@@ -1,6 +1,6 @@
-package com.postitapplications.security.security;
+package com.postitapplications.security.Filter;
 
-import com.postitapplications.security.document.MongoUserDetails;
+import com.postitapplications.security.document.SecurityUserDetails;
 import com.postitapplications.security.request.UserRequest;
 import com.postitapplications.user.document.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,10 +31,10 @@ public class UserDetailsServiceImp implements UserDetailsService {
         return getUserDetails(user);
     }
 
-    private MongoUserDetails getUserDetails(User user) {
+    private SecurityUserDetails getUserDetails(User user) {
         String[] authorities = getUserAuthorities(user);
 
-        return new MongoUserDetails(user.getUsername(), user.getPassword(), 1, false, false, true,
+        return new SecurityUserDetails(user.getUsername(), user.getPassword(), 1, false, false, true,
             authorities);
     }
 
