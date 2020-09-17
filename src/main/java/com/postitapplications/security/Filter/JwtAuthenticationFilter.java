@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.bson.json.JsonParseException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -48,8 +49,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         try {
             return new ObjectMapper().readValue(request.getInputStream(), User.class);
         } catch (IOException e) {
-            throw new RuntimeException(String
-                .format("Failed to get user object from request with error: %s", e.getMessage()));
+            throw new JsonParseException("Failed to map user object from request");
         }
     }
 
@@ -64,9 +64,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     private String createToken(Authentication authResult) {
         long now = System.currentTimeMillis();
 
-        return Jwts.builder().setSubject(authResult.getName()).claim("authorities",
-            authResult.getAuthorities().stream().map(GrantedAuthority::getAuthority)
-                      .collect(Collectors.toList())).setIssuedAt(new Date(now))
+        return Jwts.builder()
+                   .setSubject(authResult.getName())
+                   .claim("authorities", authResult.getAuthorities().stream()
+                                                   .map(GrantedAuthority::getAuthority)
+                                                   .collect(Collectors.toList()))
+                   .setIssuedAt(new Date(now))
                    .setExpiration(new Date(now + jwtProperties.getExpiration() * 1000))
                    .signWith(SignatureAlgorithm.HS512, jwtProperties.getSecret().getBytes())
                    .compact();
