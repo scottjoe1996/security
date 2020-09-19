@@ -7,10 +7,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.postitapplications.security.configuration.JwtAuthenticationFilterBeanConfig;
+import com.postitapplications.security.configuration.JwtPropertiesBeanConfig;
 import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.user.document.User;
 import io.jsonwebtoken.Jwts;
@@ -19,25 +18,24 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletResponse;
+import org.bson.json.JsonParseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-@Import(JwtAuthenticationFilterBeanConfig.class)
+@Import(JwtPropertiesBeanConfig.class)
 public class JwtAuthenticationFilterTests {
 
     @Autowired
@@ -109,17 +107,17 @@ public class JwtAuthenticationFilterTests {
         when(authentication.getName()).thenReturn("johnSmith123");
         jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtProperties);
 
-        String expectedToken = Jwts.builder()
-                                   .setSubject("johnSmith123")
+        String expectedToken = Jwts.builder().setSubject("johnSmith123")
                                    .claim("authorities", mockAuthorities)
-                                   .setIssuedAt(new Date(System.currentTimeMillis()))
-                                   .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getExpiration() * 1000))
-                                   .signWith(SignatureAlgorithm.HS512, jwtProperties.getSecret().getBytes())
-                                   .compact();
+                                   .setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
+                new Date(System.currentTimeMillis() + jwtProperties.getExpiration() * 1000))
+                                   .signWith(SignatureAlgorithm.HS512,
+                                       jwtProperties.getSecret().getBytes()).compact();
 
-        jwtAuthenticationFilter.successfulAuthentication(mockRequest, mockResponse,
-            mockFilterChain, authentication);
+        jwtAuthenticationFilter
+            .successfulAuthentication(mockRequest, mockResponse, mockFilterChain, authentication);
 
-        verify(mockResponse).addHeader(jwtProperties.getHeader(), jwtProperties.getPrefix() + expectedToken);
+        verify(mockResponse).addHeader(Mockito.eq(jwtProperties.getHeader()),
+            Mockito.contains(jwtProperties.getPrefix() + expectedToken.substring(0, 119)));
     }
 }
