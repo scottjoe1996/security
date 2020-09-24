@@ -7,7 +7,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import com.postitapplications.security.configuration.JwtProperties;
-import com.postitapplications.security.configuration.JwtPropertiesBeanConfig;
+import com.postitapplications.security.configuration.JwtBeanConfig;
+import com.postitapplications.security.utility.JwtProvider;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.io.IOException;
@@ -24,27 +25,30 @@ import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-@Import(JwtPropertiesBeanConfig.class)
+@Import(JwtBeanConfig.class)
 public class JwtAuthorizationFilterTests {
 
     @Autowired
     private JwtProperties jwtProperties;
+    @Autowired
+    private JwtProvider jwtProvider;
     private JwtAuthorizationFilter jwtAuthorizationFilter;
     private String mockJwtToken;
-    private AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
-    private MockHttpServletRequest mockRequest = new MockHttpServletRequest();
-    private HttpServletResponse mockResponse = new MockHttpServletResponse();
-    private FilterChain mockFilterChain = mock(FilterChain.class);
+    private final AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
+    private final MockHttpServletRequest mockRequest = new MockHttpServletRequest();
+    private final HttpServletResponse mockResponse = new MockHttpServletResponse();
+    private final FilterChain mockFilterChain = mock(FilterChain.class);
 
     @BeforeEach
     public void setUp() {
-        jwtAuthorizationFilter = new JwtAuthorizationFilter(authenticationManager, jwtProperties);
+        jwtAuthorizationFilter = new JwtAuthorizationFilter(authenticationManager, jwtProperties, jwtProvider);
         mockJwtToken = Jwts.builder().setSubject("johnSmith123")
                            .claim("authorities", Collections.emptyList())
                            .setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
@@ -54,7 +58,7 @@ public class JwtAuthorizationFilterTests {
     }
 
     @Test()
-    public void doFilterShouldInternalShouldSkipToNextFilterWhenAuthorizationRequestHeaderIsNull()
+    public void doFilterInternalShouldSkipToNextFilterWhenAuthorizationRequestHeaderIsNull()
         throws IOException, ServletException {
         jwtAuthorizationFilter.doFilterInternal(mockRequest, mockResponse, mockFilterChain);
 
@@ -62,7 +66,7 @@ public class JwtAuthorizationFilterTests {
     }
 
     @Test()
-    public void doFilterShouldInternalShouldSkipToNextFilterWhenAuthorizationRequestHeaderIsInvalid()
+    public void doFilterInternalShouldSkipToNextFilterWhenAuthorizationRequestHeaderIsInvalid()
         throws IOException, ServletException {
         mockRequest.addHeader(jwtProperties.getHeader(), "notValid");
 
@@ -72,16 +76,18 @@ public class JwtAuthorizationFilterTests {
     }
 
     @Test()
-    public void doFilterShouldInternalShouldSetExpectedAuthentication()
+    public void doFilterInternalShouldSetExpectedAuthentication()
         throws IOException, ServletException {
         mockRequest.addHeader(jwtProperties.getHeader(), jwtProperties.getPrefix() + mockJwtToken);
+        UsernamePasswordAuthenticationToken expectedAuthentication =
+            new UsernamePasswordAuthenticationToken("johnSmith123", null, Collections.emptyList());
         SecurityContext mockSecurityContext = mock(SecurityContext.class);
         doNothing().when(mockSecurityContext).setAuthentication(any(Authentication.class));
         SecurityContextHolder.setContext(mockSecurityContext);
 
         jwtAuthorizationFilter.doFilterInternal(mockRequest, mockResponse, mockFilterChain);
 
-        verify(mockSecurityContext, atMostOnce()).setAuthentication(any(Authentication.class));
+        verify(mockSecurityContext, atMostOnce()).setAuthentication(expectedAuthentication);
         verify(mockFilterChain, atMostOnce()).doFilter(mockRequest, mockResponse);
     }
 }

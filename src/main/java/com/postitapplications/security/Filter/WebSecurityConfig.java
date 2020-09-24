@@ -1,6 +1,7 @@
 package com.postitapplications.security.Filter;
 
 import com.postitapplications.security.configuration.JwtProperties;
+import com.postitapplications.security.utility.JwtProvider;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,12 +16,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsServiceImp userDetailsService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtProperties jwtProperties;
+    private final JwtProvider jwtProvider;
 
     public WebSecurityConfig(UserDetailsServiceImp userDetailsService,
-        BCryptPasswordEncoder passwordEncoder, JwtProperties jwtProperties) {
+        BCryptPasswordEncoder passwordEncoder, JwtProperties jwtProperties, JwtProvider jwtProvider) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.jwtProperties = jwtProperties;
+        this.jwtProvider = jwtProvider;
     }
 
     @Override
@@ -32,8 +35,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST, jwtProperties.getUri()).permitAll()
                 .anyRequest().authenticated()
             .and()
-                .addFilter(new JwtAuthenticationFilter(authenticationManager(), jwtProperties))
-                .addFilter(new JwtAuthorizationFilter(authenticationManager(), jwtProperties))
+                .addFilter(new JwtAuthenticationFilter(authenticationManager(), jwtProperties, jwtProvider))
+                .addFilter(new JwtAuthorizationFilter(authenticationManager(), jwtProperties, jwtProvider))
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 

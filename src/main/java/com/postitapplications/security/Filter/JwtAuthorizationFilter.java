@@ -1,6 +1,7 @@
 package com.postitapplications.security.Filter;
 
 import com.postitapplications.security.configuration.JwtProperties;
+import com.postitapplications.security.utility.JwtProvider;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import java.io.IOException;
@@ -19,11 +20,13 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
     private final JwtProperties jwtProperties;
+    private final JwtProvider jwtProvider;
 
     public JwtAuthorizationFilter(AuthenticationManager authenticationManager,
-        JwtProperties jwtProperties) {
+        JwtProperties jwtProperties, JwtProvider jwtProvider) {
         super(authenticationManager);
         this.jwtProperties = jwtProperties;
+        this.jwtProvider = jwtProvider;
     }
 
     @Override
@@ -49,13 +52,9 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
     private UsernamePasswordAuthenticationToken getAuthenticationToken(String header) {
         String token = header.replace(jwtProperties.getPrefix(), "");
 
-        Claims claims = Jwts.parser().setSigningKey(jwtProperties.getSecret().getBytes())
-                            .parseClaimsJws(token).getBody();
+        String username = jwtProvider.getUsernameFromToken(token);
+        List<SimpleGrantedAuthority> authorities = jwtProvider.getAuthoritiesFromToken(token);
 
-        String username = claims.getSubject();
-        List<String> authorities = (List<String>) claims.get("authorities");
-
-        return new UsernamePasswordAuthenticationToken(username, null,
-            authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList()));
+        return new UsernamePasswordAuthenticationToken(username, null, authorities);
     }
 }
