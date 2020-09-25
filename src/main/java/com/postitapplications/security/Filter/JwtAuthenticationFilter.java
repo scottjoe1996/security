@@ -54,7 +54,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     @Override
     protected void successfulAuthentication(HttpServletRequest request,
         HttpServletResponse response, FilterChain chain, Authentication authResult) {
-        String token = jwtProvider.createToken(authResult);
+        String token = jwtProvider.createTokenFromAuthentication(authResult);
 
         response.addHeader(jwtProperties.getHeader(), jwtProperties.getPrefix() + token);
     }

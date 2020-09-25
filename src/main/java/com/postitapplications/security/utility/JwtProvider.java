@@ -2,6 +2,8 @@ package com.postitapplications.security.utility;
 
 import com.postitapplications.security.configuration.JwtProperties;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwt;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.util.Date;
@@ -21,18 +23,27 @@ public class JwtProvider {
         this.jwtProperties = jwtProperties;
     }
 
-    public String createToken(Authentication authResult) {
+    public String createTokenFromAuthentication(Authentication authentication) {
         long now = System.currentTimeMillis();
 
         return Jwts.builder()
-                   .setSubject(authResult.getName())
-                   .claim("authorities", authResult.getAuthorities().stream()
+                   .setSubject(authentication.getName())
+                   .claim("authorities", authentication.getAuthorities().stream()
                                                    .map(GrantedAuthority::getAuthority)
                                                    .collect(Collectors.toList()))
                    .setIssuedAt(new Date(now))
                    .setExpiration(new Date(now + jwtProperties.getExpiration() * 1000))
                    .signWith(SignatureAlgorithm.HS512, jwtProperties.getSecret().getBytes())
                    .compact();
+    }
+
+    public void validateToken(String token) {
+        try {
+            Jwts.parser().parse(token);
+        } catch (Exception e) {
+            throw new JwtException(String.format("failed to parse given token with error %s",
+                e.getMessage()));
+        }
     }
 
     public List<SimpleGrantedAuthority> getAuthoritiesFromToken(String token) {
@@ -44,16 +55,6 @@ public class JwtProvider {
     public String getUsernameFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
         return claims.getSubject();
-    }
-
-    public Boolean isTokenExpired(String token) {
-        Date expirationDate = getExpirationFromToken(token);
-        return expirationDate.before(new Date());
-    }
-
-    private Date getExpirationFromToken(String token) {
-        Claims claims = getClaimsFromToken(token);
-        return claims.getExpiration();
     }
 
     private Claims getClaimsFromToken(String token) {
