@@ -6,8 +6,10 @@ import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -37,19 +39,16 @@ public class JwtProvider {
                    .compact();
     }
 
-    public void validateToken(String token) {
-        try {
-            Jwts.parser().parse(token);
-        } catch (Exception e) {
-            throw new JwtException(String.format("failed to parse given token with error %s",
-                e.getMessage()));
-        }
-    }
-
     public List<SimpleGrantedAuthority> getAuthoritiesFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        List<String> authorities = (List<String>) claims.get("authorities");
+        List<String> authorities = getAuthoritiesFromClaims(claims);
         return authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+    }
+
+    private List<String> getAuthoritiesFromClaims(Claims claims) {
+        @SuppressWarnings("unchecked")
+        List<String> authorities = (List<String>) claims.get("authorities");
+        return Objects.requireNonNullElse(authorities, Collections.emptyList());
     }
 
     public String getUsernameFromToken(String token) {
@@ -58,7 +57,12 @@ public class JwtProvider {
     }
 
     private Claims getClaimsFromToken(String token) {
-        return Jwts.parser().setSigningKey(jwtProperties.getSecret().getBytes())
-                   .parseClaimsJws(token).getBody();
+        try {
+            return Jwts.parser().setSigningKey(jwtProperties.getSecret().getBytes())
+                       .parseClaimsJws(token).getBody();
+        } catch(Exception e) {
+            throw new JwtException(String.format("failed to parse given token with error: %s",
+                e.getMessage()));
+        }
     }
 }

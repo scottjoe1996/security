@@ -1,24 +1,25 @@
 package com.postitapplications.security.utility;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.postitapplications.security.configuration.JwtBeanConfig;
 import com.postitapplications.security.configuration.JwtProperties;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.util.Collections;
 import java.util.Date;
-import java.util.stream.Collectors;
-import org.junit.Before;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
@@ -61,9 +62,57 @@ public class JwtProviderTests {
     }
 
     @Test
-    public void getUserNameFromTokenShouldReturnExpectedUsernamet() {
+    public void getUserNameFromTokenShouldThrowJwtExceptionWhenTokenIsNull() {
+        Exception exception = assertThrows(JwtException.class, () -> {
+            jwtProvider.getUsernameFromToken(null);
+        });
+
+        assertThat(exception.getMessage()).isEqualTo(
+            "failed to parse given token with error: JWT String argument cannot be null or empty.");
+    }
+
+    @Test
+    public void getUserNameFromTokenShouldReturnNullIfTokenHasNoSubject() {
+        testToken = Jwts.builder()
+                        .claim("authorities", Collections.emptyList())
+                        .setIssuedAt(new Date(testTime))
+                        .setExpiration(new Date(testTime + jwtProperties.getExpiration() * 1000))
+                        .signWith(SignatureAlgorithm.HS512, jwtProperties.getSecret().getBytes())
+                        .compact();
+
         String username = jwtProvider.getUsernameFromToken(testToken);
 
-        assertThat(username).isEqualTo("johnSmith123");
+        assertThat(username).isEqualTo(null);
+    }
+
+    @Test
+    public void getAuthoritiesFromTokenShouldReturnExpectedAuthorities() {
+        List<SimpleGrantedAuthority> authorities = jwtProvider.getAuthoritiesFromToken(testToken);
+
+        assertThat(authorities).isEqualTo(Collections.emptyList());
+    }
+
+    @Test
+    public void getAuthoritiesFromTokenShouldThrowJwtExceptionWhenTokenIsNull() {
+        Exception exception = assertThrows(JwtException.class, () -> {
+            jwtProvider.getAuthoritiesFromToken(null);
+        });
+
+        assertThat(exception.getMessage()).isEqualTo(
+            "failed to parse given token with error: JWT String argument cannot be null or empty.");
+    }
+
+    @Test
+    public void getAuthoritiesFromTokenShouldReturnEmptyListIfTokenHasNoAuthorities() {
+        testToken = Jwts.builder()
+                        .setSubject("johnSmith123")
+                        .setIssuedAt(new Date(testTime))
+                        .setExpiration(new Date(testTime + jwtProperties.getExpiration() * 1000))
+                        .signWith(SignatureAlgorithm.HS512, jwtProperties.getSecret().getBytes())
+                        .compact();
+
+        List<SimpleGrantedAuthority> authorities = jwtProvider.getAuthoritiesFromToken(testToken);
+
+        assertThat(authorities).isEqualTo(Collections.emptyList());
     }
 }

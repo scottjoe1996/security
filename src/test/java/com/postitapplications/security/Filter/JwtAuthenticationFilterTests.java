@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
-import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletResponse;
 import org.bson.json.JsonParseException;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +45,9 @@ public class JwtAuthenticationFilterTests {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
     private String userAsString;
     private final AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
+    private final MockHttpServletRequest mockRequest = new MockHttpServletRequest();
+    private final HttpServletResponse mockResponse = mock(HttpServletResponse.class);
+    private final Authentication mockAuthentication = mock(Authentication.class);
 
     @BeforeEach
     public void setUp() throws JsonProcessingException {
@@ -56,13 +58,11 @@ public class JwtAuthenticationFilterTests {
 
     @Test
     public void attemptAuthenticationShouldReturnExpectedAuthenticationWithValidUser() {
-        MockHttpServletRequest mockRequest = new MockHttpServletRequest();
         mockRequest.setContent(userAsString.getBytes());
-        HttpServletResponse mockResponse = mock(HttpServletResponse.class);
-        Authentication mockAuthentication = mock(Authentication.class);
         when(authenticationManager.authenticate(any(Authentication.class)))
             .thenReturn(mockAuthentication);
-        jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtProperties, jwtProvider);
+        jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtProperties,
+            jwtProvider);
 
         Authentication authentication = jwtAuthenticationFilter
             .attemptAuthentication(mockRequest, mockResponse);
@@ -73,10 +73,9 @@ public class JwtAuthenticationFilterTests {
     @Test
     public void attemptAuthenticationShouldThrowJsonParseExceptionWhenRequestBodyIsInvalid() {
         String invalidBodyString = "invalidBodyString";
-        MockHttpServletRequest mockRequest = new MockHttpServletRequest();
         mockRequest.setContent(invalidBodyString.getBytes());
-        HttpServletResponse mockResponse = mock(HttpServletResponse.class);
-        jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtProperties, jwtProvider);
+        jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtProperties,
+            jwtProvider);
 
         Exception exception = assertThrows(JsonParseException.class, () -> {
             jwtAuthenticationFilter.attemptAuthentication(mockRequest, mockResponse);
@@ -87,12 +86,11 @@ public class JwtAuthenticationFilterTests {
 
     @Test
     public void attemptAuthenticationShouldThrowBadCredentialsExceptionExceptionWhenUserFailsToAuthenticate() {
-        MockHttpServletRequest mockRequest = new MockHttpServletRequest();
         mockRequest.setContent(userAsString.getBytes());
-        HttpServletResponse mockResponse = mock(HttpServletResponse.class);
         when(authenticationManager.authenticate(any(Authentication.class)))
             .thenThrow(BadCredentialsException.class);
-        jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtProperties, jwtProvider);
+        jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtProperties,
+            jwtProvider);
 
         assertThrows(BadCredentialsException.class, () -> {
             jwtAuthenticationFilter.attemptAuthentication(mockRequest, mockResponse);
@@ -101,14 +99,11 @@ public class JwtAuthenticationFilterTests {
 
     @Test
     public void successfulAuthenticationShouldAddExpectedTokenToResponseHeader() {
-        MockHttpServletRequest mockRequest = new MockHttpServletRequest();
-        HttpServletResponse mockResponse = mock(HttpServletResponse.class);
-        FilterChain mockFilterChain = new MockFilterChain();
-        Authentication authentication = mock(Authentication.class);
         Collection mockAuthorities = Collections.emptyList();
-        when(authentication.getAuthorities()).thenReturn(mockAuthorities);
-        when(authentication.getName()).thenReturn("johnSmith123");
-        jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtProperties, jwtProvider);
+        when(mockAuthentication.getAuthorities()).thenReturn(mockAuthorities);
+        when(mockAuthentication.getName()).thenReturn("johnSmith123");
+        jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtProperties,
+            jwtProvider);
 
         String expectedToken = Jwts.builder().setSubject("johnSmith123")
                                    .claim("authorities", mockAuthorities)
@@ -118,7 +113,8 @@ public class JwtAuthenticationFilterTests {
                                        jwtProperties.getSecret().getBytes()).compact();
 
         jwtAuthenticationFilter
-            .successfulAuthentication(mockRequest, mockResponse, mockFilterChain, authentication);
+            .successfulAuthentication(mockRequest, mockResponse, new MockFilterChain(),
+                mockAuthentication);
 
         verify(mockResponse).addHeader(Mockito.eq(jwtProperties.getHeader()),
             Mockito.contains(jwtProperties.getPrefix() + expectedToken.substring(0, 119)));
