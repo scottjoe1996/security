@@ -18,13 +18,13 @@ public class SecurityUserDetails implements UserDetails {
     private final boolean isEnabled;
     private final List<GrantedAuthority> grantedAuthorities;
 
-    public SecurityUserDetails(String username, String password,Integer active, boolean isLocked, boolean isExpired, boolean isEnabled, String [] authorities) {
+    public SecurityUserDetails(String username, String password, String [] authorities) {
         this.username = username;
         this.password = password;
-        this.active = active;
-        this.isLocked = isLocked;
-        this.isExpired = isExpired;
-        this.isEnabled = isEnabled;
+        this.active = 1;
+        this.isLocked = false;
+        this.isExpired = false;
+        this.isEnabled = true;
         this.grantedAuthorities = AuthorityUtils.createAuthorityList(authorities);
     }
 

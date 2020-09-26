@@ -1,14 +1,17 @@
 package com.postitapplications.security.Filter;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atMostOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.security.configuration.JwtBeanConfig;
+import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.security.utility.JwtProvider;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.io.IOException;
@@ -25,6 +28,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -45,6 +49,7 @@ public class JwtAuthorizationFilterTests {
     private final MockHttpServletRequest mockRequest = new MockHttpServletRequest();
     private final HttpServletResponse mockResponse = new MockHttpServletResponse();
     private final FilterChain mockFilterChain = mock(FilterChain.class);
+    private final SecurityContext mockSecurityContext = mock(SecurityContext.class);
 
     @BeforeEach
     public void setUp() {
@@ -81,7 +86,6 @@ public class JwtAuthorizationFilterTests {
         mockRequest.addHeader(jwtProperties.getHeader(), jwtProperties.getPrefix() + mockJwtToken);
         UsernamePasswordAuthenticationToken expectedAuthentication =
             new UsernamePasswordAuthenticationToken("johnSmith123", null, Collections.emptyList());
-        SecurityContext mockSecurityContext = mock(SecurityContext.class);
         doNothing().when(mockSecurityContext).setAuthentication(any(Authentication.class));
         SecurityContextHolder.setContext(mockSecurityContext);
 
@@ -89,5 +93,27 @@ public class JwtAuthorizationFilterTests {
 
         verify(mockSecurityContext, atMostOnce()).setAuthentication(expectedAuthentication);
         verify(mockFilterChain, atMostOnce()).doFilter(mockRequest, mockResponse);
+    }
+
+    @Test()
+    public void doFilterInternalShouldThrowJwtExceptionIfTokenIsNull() {
+        mockRequest.addHeader(jwtProperties.getHeader(), jwtProperties.getPrefix() + null);
+
+        Exception exception = assertThrows(JwtException.class, () -> {
+            jwtAuthorizationFilter.doFilterInternal(mockRequest, mockResponse, mockFilterChain);
+        });
+
+        assertThat(exception.getMessage()).isEqualTo("failed to parse given token with error: JWT strings must contain exactly 2 period characters. Found: 0");
+    }
+
+    @Test()
+    public void doFilterInternalShouldThrowJwtExceptionIfTokenIsEmpty() {
+        mockRequest.addHeader(jwtProperties.getHeader(), jwtProperties.getPrefix() + "");
+
+        Exception exception = assertThrows(JwtException.class, () -> {
+            jwtAuthorizationFilter.doFilterInternal(mockRequest, mockResponse, mockFilterChain);
+        });
+
+        assertThat(exception.getMessage()).isEqualTo("failed to parse given token with error: JWT String argument cannot be null or empty");
     }
 }

@@ -1,6 +1,5 @@
 package com.postitapplications.security.configuration;
 
-import com.postitapplications.security.Filter.JwtAuthenticationFilter;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

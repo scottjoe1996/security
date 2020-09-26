@@ -34,8 +34,7 @@ public class UserDetailsServiceImp implements UserDetailsService {
     private SecurityUserDetails getUserDetails(User user) {
         String[] authorities = getUserAuthorities(user);
 
-        return new SecurityUserDetails(user.getUsername(), user.getPassword(), 1, false, false, true,
-            authorities);
+        return new SecurityUserDetails(user.getUsername(), user.getPassword(), authorities);
     }
 
     private String[] getUserAuthorities(User user) {
