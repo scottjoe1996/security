@@ -3,7 +3,6 @@ package com.postitapplications.security.controller;
 import com.postitapplications.security.request.UserRequest;
 import com.postitapplications.user.document.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,19 +24,19 @@ public class SecurityController {
     }
 
     @PostMapping("register")
-    public User register(@RequestBody User user) {
-        User userToRegister = new User(null, user.getUsername(), passwordEncoder.encode(
-            user.getPassword()));
+    public User registerUser(@RequestBody User user) {
+        User userToRegister = new User(null, user.getUsername(),
+            passwordEncoder.encode(user.getPassword()));
         return userRequest.saveUser(userToRegister);
     }
 
     @PostMapping("log-in")
     public String logIn() {
-        return "You are authorised!";
+        return "You are logged in!";
     }
 
     @DeleteMapping("log-out")
     public String logOut() {
-        return "You are authorised!";
+        return "You are logged out!";
     }
 }
