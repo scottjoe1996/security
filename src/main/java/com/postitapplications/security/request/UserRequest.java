@@ -31,8 +31,9 @@ public class UserRequest {
     }
 
     public User saveUser(User user) throws RestClientException {
+        String userServiceUrl = externalServiceProperties.getUserUrl();
         ResponseEntity<User> response = restTemplate
-            .postForEntity(externalServiceProperties.getUserUrl(), user, User.class);
+            .postForEntity(userServiceUrl, user, User.class);
 
         return response.getBody();
     }

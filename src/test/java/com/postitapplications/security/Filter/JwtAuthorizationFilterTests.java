@@ -114,6 +114,7 @@ public class JwtAuthorizationFilterTests {
             jwtAuthorizationFilter.doFilterInternal(mockRequest, mockResponse, mockFilterChain);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("failed to parse given token with error: JWT String argument cannot be null or empty");
+        assertThat(exception.getMessage()).isEqualTo("failed to parse given token with error: JWT"
+            + " String argument cannot be null or empty.");
     }
 }
