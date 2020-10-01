@@ -77,7 +77,7 @@ public class UserRequestTests {
                   .andRespond(withStatus(HttpStatus.BAD_REQUEST));
 
         assertThrows(HttpClientErrorException.class, () -> {
-            userRequest.saveUser(new User(UUID.randomUUID(), "johnSmith123", "password"));
+            userRequest.saveUser(null);
         });
     }
 }

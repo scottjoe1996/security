@@ -26,11 +26,11 @@ public class SecurityController {
     }
 
     @PostMapping("register")
-    public ResponseEntity<User> registerUser(@RequestBody User user) {
+    public ResponseEntity<String> registerUser(@RequestBody User user) {
         User userToRegister = new User(null, user.getUsername(),
             passwordEncoder.encode(user.getPassword()));
         User registeredUser = userRequest.saveUser(userToRegister);
-        return new ResponseEntity<>(registeredUser, HttpStatus.CREATED);
+        return new ResponseEntity<>(registeredUser.getId().toString(), HttpStatus.CREATED);
     }
 
     @PostMapping("log-in")
