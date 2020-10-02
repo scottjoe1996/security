@@ -40,7 +40,7 @@ public class UserRequestTests {
 
     @Test
     public void getUserByUsernameShouldReturnUserOnSuccessfulResponse() {
-        mockServer.expect(requestTo("http://user-service/user/username/johnSmith123"))
+        mockServer.expect(requestTo("http://localhost:1040/user/username/johnSmith123"))
                   .andRespond(withSuccess(userAsString, MediaType.APPLICATION_JSON));
 
         User response = userRequest.getUserByUsername("johnSmith123");
@@ -51,7 +51,7 @@ public class UserRequestTests {
 
     @Test
     public void getUserByUsernameShouldThrowHttpClientErrorExceptionOnAllNonSuccessfulResponses() {
-        mockServer.expect(requestTo("http://user-service/user/username/fakeUsername"))
+        mockServer.expect(requestTo("http://localhost:1040/user/username/fakeUsername"))
                   .andRespond(withStatus(HttpStatus.BAD_REQUEST));
 
         assertThrows(HttpClientErrorException.class, () -> {
@@ -61,7 +61,7 @@ public class UserRequestTests {
 
     @Test
     public void saveUserShouldReturnUserOnSuccessfulResponse() {
-        mockServer.expect(requestTo("http://user-service/user/"))
+        mockServer.expect(requestTo("http://localhost:1040/user/"))
                   .andRespond(withSuccess(userAsString, MediaType.APPLICATION_JSON));
 
         User response = userRequest
@@ -73,7 +73,7 @@ public class UserRequestTests {
 
     @Test
     public void saveUserShouldThrowHttpClientErrorExceptionOnAllNonSuccessfulResponses() {
-        mockServer.expect(requestTo("http://user-service/user/"))
+        mockServer.expect(requestTo("http://localhost:1040/user/"))
                   .andRespond(withStatus(HttpStatus.BAD_REQUEST));
 
         assertThrows(HttpClientErrorException.class, () -> {
