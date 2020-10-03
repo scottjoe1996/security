@@ -8,6 +8,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.postitapplications.exception.exceptions.ExternalServiceException;
 import com.postitapplications.user.document.User;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,11 +51,11 @@ public class UserRequestTests {
     }
 
     @Test
-    public void getUserByUsernameShouldThrowHttpClientErrorExceptionOnAllNonSuccessfulResponses() {
+    public void getUserByUsernameShouldThrowExternalServiceExceptionOnAllNonSuccessfulResponses() {
         mockServer.expect(requestTo("http://localhost:1040/user/username/fakeUsername"))
                   .andRespond(withStatus(HttpStatus.BAD_REQUEST));
 
-        assertThrows(HttpClientErrorException.class, () -> {
+        assertThrows(ExternalServiceException.class, () -> {
             userRequest.getUserByUsername("fakeUsername");
         });
     }
@@ -72,11 +73,11 @@ public class UserRequestTests {
     }
 
     @Test
-    public void saveUserShouldThrowHttpClientErrorExceptionOnAllNonSuccessfulResponses() {
+    public void saveUserShouldThrowExternalServiceExceptionOnAllNonSuccessfulResponses() {
         mockServer.expect(requestTo("http://localhost:1040/user/"))
                   .andRespond(withStatus(HttpStatus.BAD_REQUEST));
 
-        assertThrows(HttpClientErrorException.class, () -> {
+        assertThrows(ExternalServiceException.class, () -> {
             userRequest.saveUser(null);
         });
     }

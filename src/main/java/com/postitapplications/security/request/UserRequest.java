@@ -1,6 +1,7 @@
 package com.postitapplications.security.request;
 
 import com.postitapplications.security.configuration.ExternalServiceProperties;
+import com.postitapplications.security.exception.RestTemplateResponseErrorHandler;
 import com.postitapplications.user.document.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -18,7 +19,9 @@ public class UserRequest {
     @Autowired
     public UserRequest(RestTemplateBuilder restTemplateBuilder,
         ExternalServiceProperties externalServiceProperties) {
-        this.restTemplate = restTemplateBuilder.build();
+        this.restTemplate = restTemplateBuilder
+                                .errorHandler(new RestTemplateResponseErrorHandler())
+                                .build();
         this.externalServiceProperties = externalServiceProperties;
     }
 
