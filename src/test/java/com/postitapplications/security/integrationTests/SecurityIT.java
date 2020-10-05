@@ -57,13 +57,53 @@ public class SecurityIT {
 
     @Test
     public void registerUserShouldReturnGivenStatusCodeWhenUserRequestThrowsAExternalServiceException() {
-        when(userRequest.saveUser(any(User.class))).thenThrow(
-            new ExternalServiceException(HttpStatus.BAD_REQUEST,
-                "user's password cannot be null or empty"));
+        when(userRequest.saveUser(any(User.class)))
+            .thenThrow(new ExternalServiceException(HttpStatus.BAD_GATEWAY, "errorMessage"));
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .postForEntity("/security/register", new User(null, "johnSmith123", "password"),
+                String.class);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+    }
+
+    @Test
+    public void registerUserShouldReturnBadRequestStatusCodeWhenUserUsernameIsNull() {
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .postForEntity("/security/register", new User(null, null, "password"), String.class);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void registerUserShouldReturnBadRequestStatusCodeWhenUserUsernameIsEmpty() {
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .postForEntity("/security/register", new User(null, "", "password"), String.class);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void registerUserShouldReturnBadRequestStatusCodeWhenUserPasswordIsNull() {
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .postForEntity("/security/register", new User(null, "johnSmith123", null),
+                String.class);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void registerUserShouldReturnBadRequestStatusCodeWhenUserPasswordIsEmpty() {
         ResponseEntity<String> responseEntity = testRestTemplate
             .postForEntity("/security/register", new User(null, "johnSmith123", ""), String.class);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(responseEntity.getBody()).contains("user's password cannot be null or empty");
+    }
+
+    @Test
+    public void registerUserShouldReturnBadRequestStatusCodeWhenUserIsNull() {
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .postForEntity("/security/register", null, String.class);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 }

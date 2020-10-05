@@ -2,6 +2,7 @@ package com.postitapplications.security.controller;
 
 import com.postitapplications.security.request.UserRequest;
 import com.postitapplications.user.document.User;
+import com.postitapplications.user.utility.UserValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,7 @@ public class SecurityController {
 
     @PostMapping("register")
     public ResponseEntity<String> registerUser(@RequestBody User user) {
+        UserValidator.validateUser(user);
         User userToRegister = new User(null, user.getUsername(),
             passwordEncoder.encode(user.getPassword()));
         User registeredUser = userRequest.saveUser(userToRegister);
