@@ -35,8 +35,7 @@ public class JwtProviderTests {
 
     @BeforeEach
     public void setUp() {
-        testToken = Jwts.builder()
-                        .setSubject("johnSmith123")
+        testToken = Jwts.builder().setSubject("johnSmith123")
                         .claim("authorities", Collections.emptyList())
                         .setIssuedAt(new Date(testTime))
                         .setExpiration(new Date(testTime + jwtProperties.getExpiration() * 1000))
@@ -72,9 +71,24 @@ public class JwtProviderTests {
     }
 
     @Test
+    public void getUserNameFromTokenShouldThrowJwtExceptionWhenTokenHasDifferentSigningKey() {
+        String testSigningKey = "testSigningKey";
+        testToken = Jwts.builder().claim("authorities", Collections.emptyList())
+                        .setIssuedAt(new Date(testTime))
+                        .setExpiration(new Date(testTime + jwtProperties.getExpiration() * 1000))
+                        .signWith(SignatureAlgorithm.HS512, testSigningKey.getBytes()).compact();
+
+        Exception exception = assertThrows(JwtException.class, () -> {
+            jwtProvider.getUsernameFromToken(testToken);
+        });
+
+        assertThat(exception.getMessage()).isEqualTo(
+            "failed to parse given token with error: JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.");
+    }
+
+    @Test
     public void getUserNameFromTokenShouldReturnNullIfTokenHasNoSubject() {
-        testToken = Jwts.builder()
-                        .claim("authorities", Collections.emptyList())
+        testToken = Jwts.builder().claim("authorities", Collections.emptyList())
                         .setIssuedAt(new Date(testTime))
                         .setExpiration(new Date(testTime + jwtProperties.getExpiration() * 1000))
                         .signWith(SignatureAlgorithm.HS512, jwtProperties.getSecret().getBytes())
@@ -103,10 +117,24 @@ public class JwtProviderTests {
     }
 
     @Test
-    public void getAuthoritiesFromTokenShouldReturnEmptyListIfTokenHasNoAuthorities() {
-        testToken = Jwts.builder()
-                        .setSubject("johnSmith123")
+    public void getAuthoritiesFromTokenShouldThrowJwtExceptionWhenTokenHasDifferentSigningKey() {
+        String testSigningKey = "testSigningKey";
+        testToken = Jwts.builder().claim("authorities", Collections.emptyList())
                         .setIssuedAt(new Date(testTime))
+                        .setExpiration(new Date(testTime + jwtProperties.getExpiration() * 1000))
+                        .signWith(SignatureAlgorithm.HS512, testSigningKey.getBytes()).compact();
+
+        Exception exception = assertThrows(JwtException.class, () -> {
+            jwtProvider.getAuthoritiesFromToken(testToken);
+        });
+
+        assertThat(exception.getMessage()).isEqualTo(
+            "failed to parse given token with error: JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.");
+    }
+
+    @Test
+    public void getAuthoritiesFromTokenShouldReturnEmptyListIfTokenHasNoAuthorities() {
+        testToken = Jwts.builder().setSubject("johnSmith123").setIssuedAt(new Date(testTime))
                         .setExpiration(new Date(testTime + jwtProperties.getExpiration() * 1000))
                         .signWith(SignatureAlgorithm.HS512, jwtProperties.getSecret().getBytes())
                         .compact();

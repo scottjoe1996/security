@@ -28,7 +28,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -50,14 +49,16 @@ public class JwtAuthorizationFilterTests {
     private final HttpServletResponse mockResponse = new MockHttpServletResponse();
     private final FilterChain mockFilterChain = mock(FilterChain.class);
     private final SecurityContext mockSecurityContext = mock(SecurityContext.class);
+    private final long testTime = System.currentTimeMillis();
 
     @BeforeEach
     public void setUp() {
-        jwtAuthorizationFilter = new JwtAuthorizationFilter(authenticationManager, jwtProperties, jwtProvider);
+        jwtAuthorizationFilter = new JwtAuthorizationFilter(authenticationManager, jwtProperties,
+            jwtProvider);
         mockJwtToken = Jwts.builder().setSubject("johnSmith123")
                            .claim("authorities", Collections.emptyList())
-                           .setIssuedAt(new Date(System.currentTimeMillis())).setExpiration(
-                new Date(System.currentTimeMillis() + jwtProperties.getExpiration() * 1000))
+                           .setIssuedAt(new Date(testTime))
+                           .setExpiration(new Date(testTime + jwtProperties.getExpiration() * 1000))
                            .signWith(SignatureAlgorithm.HS512, jwtProperties.getSecret().getBytes())
                            .compact();
     }
@@ -84,8 +85,8 @@ public class JwtAuthorizationFilterTests {
     public void doFilterInternalShouldSetExpectedAuthentication()
         throws IOException, ServletException {
         mockRequest.addHeader(jwtProperties.getHeader(), jwtProperties.getPrefix() + mockJwtToken);
-        UsernamePasswordAuthenticationToken expectedAuthentication =
-            new UsernamePasswordAuthenticationToken("johnSmith123", null, Collections.emptyList());
+        UsernamePasswordAuthenticationToken expectedAuthentication = new UsernamePasswordAuthenticationToken(
+            "johnSmith123", null, Collections.emptyList());
         doNothing().when(mockSecurityContext).setAuthentication(any(Authentication.class));
         SecurityContextHolder.setContext(mockSecurityContext);
 
@@ -103,7 +104,8 @@ public class JwtAuthorizationFilterTests {
             jwtAuthorizationFilter.doFilterInternal(mockRequest, mockResponse, mockFilterChain);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("failed to parse given token with error: JWT strings must contain exactly 2 period characters. Found: 0");
+        assertThat(exception.getMessage()).isEqualTo(
+            "failed to parse given token with error: JWT strings must contain exactly 2 period characters. Found: 0");
     }
 
     @Test()
@@ -116,5 +118,23 @@ public class JwtAuthorizationFilterTests {
 
         assertThat(exception.getMessage()).isEqualTo("failed to parse given token with error: JWT"
             + " String argument cannot be null or empty.");
+    }
+
+    @Test()
+    public void doFilterInternalShouldThrowJwtExceptionIfTokenHasDifferentSigningKey() {
+        String testSigningKey = "testSigningKey";
+        mockJwtToken = Jwts.builder().setSubject("johnSmith123")
+                           .claim("authorities", Collections.emptyList())
+                           .setIssuedAt(new Date(testTime))
+                           .setExpiration(new Date(testTime + jwtProperties.getExpiration() * 1000))
+                           .signWith(SignatureAlgorithm.HS512, testSigningKey.getBytes()).compact();
+        mockRequest.addHeader(jwtProperties.getHeader(), jwtProperties.getPrefix() + mockJwtToken);
+
+        Exception exception = assertThrows(JwtException.class, () -> {
+            jwtAuthorizationFilter.doFilterInternal(mockRequest, mockResponse, mockFilterChain);
+        });
+
+        assertThat(exception.getMessage()).isEqualTo(
+            "failed to parse given token with error: JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.");
     }
 }

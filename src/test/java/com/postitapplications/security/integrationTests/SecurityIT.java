@@ -5,8 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.postitapplications.exception.exceptions.ExternalServiceException;
+import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.security.request.UserRequest;
 import com.postitapplications.user.document.User;
+import java.util.Arrays;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,8 +17,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -28,18 +35,22 @@ public class SecurityIT {
     private UserRequest userRequest;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+    @Autowired
+    private JwtProperties jwtProperties;
+    private User userToSave;
     private User savedUser;
 
     @BeforeEach
     public void setUp() {
-        savedUser = new User(UUID.randomUUID(), "johnSmith123", "password");
+        userToSave = new User(UUID.randomUUID(), "johnSmith123", "password");
+        savedUser = new User(UUID.randomUUID(), "johnSmith123", passwordEncoder.encode("password"));
     }
 
     @Test
     public void registerUserShouldReturnSavedUserIdWithSuccessfulRegistration() {
         when(userRequest.saveUser(any(User.class))).thenReturn(savedUser);
         ResponseEntity<String> responseEntity = testRestTemplate
-            .postForEntity("/security/register", savedUser, String.class);
+            .postForEntity("/security/user", userToSave, String.class);
         String userId = responseEntity.getBody();
 
         assertThat(userId).isEqualTo(savedUser.getId().toString());
@@ -49,7 +60,7 @@ public class SecurityIT {
     public void registerUserShouldReturnCreatedStatusCodeWithSuccessfulRegistration() {
         when(userRequest.saveUser(any(User.class))).thenReturn(savedUser);
         ResponseEntity<String> responseEntity = testRestTemplate
-            .postForEntity("/security/register", savedUser, String.class);
+            .postForEntity("/security/user", userToSave, String.class);
         HttpStatus responseStatusCode = responseEntity.getStatusCode();
 
         assertThat(responseStatusCode).isEqualTo(HttpStatus.CREATED);
@@ -60,7 +71,7 @@ public class SecurityIT {
         when(userRequest.saveUser(any(User.class)))
             .thenThrow(new ExternalServiceException(HttpStatus.BAD_GATEWAY, "errorMessage"));
         ResponseEntity<String> responseEntity = testRestTemplate
-            .postForEntity("/security/register", new User(null, "johnSmith123", "password"),
+            .postForEntity("/security/user", new User(null, "johnSmith123", "password"),
                 String.class);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
@@ -69,7 +80,7 @@ public class SecurityIT {
     @Test
     public void registerUserShouldReturnBadRequestStatusCodeWhenUserUsernameIsNull() {
         ResponseEntity<String> responseEntity = testRestTemplate
-            .postForEntity("/security/register", new User(null, null, "password"), String.class);
+            .postForEntity("/security/user", new User(null, null, "password"), String.class);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -77,7 +88,7 @@ public class SecurityIT {
     @Test
     public void registerUserShouldReturnBadRequestStatusCodeWhenUserUsernameIsEmpty() {
         ResponseEntity<String> responseEntity = testRestTemplate
-            .postForEntity("/security/register", new User(null, "", "password"), String.class);
+            .postForEntity("/security/user", new User(null, "", "password"), String.class);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -85,8 +96,7 @@ public class SecurityIT {
     @Test
     public void registerUserShouldReturnBadRequestStatusCodeWhenUserPasswordIsNull() {
         ResponseEntity<String> responseEntity = testRestTemplate
-            .postForEntity("/security/register", new User(null, "johnSmith123", null),
-                String.class);
+            .postForEntity("/security/user", new User(null, "johnSmith123", null), String.class);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -94,7 +104,7 @@ public class SecurityIT {
     @Test
     public void registerUserShouldReturnBadRequestStatusCodeWhenUserPasswordIsEmpty() {
         ResponseEntity<String> responseEntity = testRestTemplate
-            .postForEntity("/security/register", new User(null, "johnSmith123", ""), String.class);
+            .postForEntity("/security/user", new User(null, "johnSmith123", ""), String.class);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -102,8 +112,29 @@ public class SecurityIT {
     @Test
     public void registerUserShouldReturnBadRequestStatusCodeWhenUserIsNull() {
         ResponseEntity<String> responseEntity = testRestTemplate
-            .postForEntity("/security/register", null, String.class);
+            .postForEntity("/security/user", null, String.class);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void getAuthoritiesShouldReturnExpectedAuthorities() {
+        when(userRequest.getUserByUsername("johnSmith123")).thenReturn(savedUser);
+        ResponseEntity<String> logInResponseEntity = testRestTemplate
+            .postForEntity("/auth", userToSave, String.class);
+        String validJwt = logInResponseEntity.getHeaders().get(jwtProperties.getHeader()).get(0);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(jwtProperties.getHeader(), validJwt);
+        HttpEntity<String> httpEntity = new HttpEntity<>("parameters", headers);
+
+        ResponseEntity<SimpleGrantedAuthority[]> responseEntity = testRestTemplate
+            .exchange("/security/authorities", HttpMethod.GET, httpEntity,
+                SimpleGrantedAuthority[].class);
+        SimpleGrantedAuthority[] authorities = responseEntity.getBody();
+
+        assertThat(authorities).isEqualTo(new String[] {"test"});
     }
 }
