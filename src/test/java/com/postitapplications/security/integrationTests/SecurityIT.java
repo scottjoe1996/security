@@ -6,9 +6,12 @@ import static org.mockito.Mockito.when;
 
 import com.postitapplications.exception.exceptions.ExternalServiceException;
 import com.postitapplications.security.configuration.JwtProperties;
+import com.postitapplications.security.document.Authorisation;
 import com.postitapplications.security.request.UserRequest;
 import com.postitapplications.user.document.User;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,12 +20,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -118,23 +123,35 @@ public class SecurityIT {
     }
 
     @Test
-    public void getAuthoritiesShouldReturnExpectedAuthorities() {
+    public void getAuthoritiesShouldReturnExpectedAuthoritiesWithValidJwt() {
         when(userRequest.getUserByUsername("johnSmith123")).thenReturn(savedUser);
         ResponseEntity<String> logInResponseEntity = testRestTemplate
             .postForEntity("/auth", userToSave, String.class);
         String validJwt = logInResponseEntity.getHeaders().get(jwtProperties.getHeader()).get(0);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set(jwtProperties.getHeader(), validJwt);
         HttpEntity<String> httpEntity = new HttpEntity<>("parameters", headers);
 
-        ResponseEntity<SimpleGrantedAuthority[]> responseEntity = testRestTemplate
-            .exchange("/security/authorities", HttpMethod.GET, httpEntity,
-                SimpleGrantedAuthority[].class);
-        SimpleGrantedAuthority[] authorities = responseEntity.getBody();
+        ResponseEntity<List<Authorisation>> responseEntity = testRestTemplate
+            .exchange("/security/authorisation", HttpMethod.GET, httpEntity, new ParameterizedTypeReference<>() {
+            });
+        List<Authorisation> authorities = responseEntity.getBody();
 
-        assertThat(authorities).isEqualTo(new String[] {"test"});
+        assertThat(authorities.get(0).getAuthorisation()).isEqualTo("ROLE_" + savedUser.getId());
+    }
+
+    @Test
+    public void getAuthoritiesShouldReturnUnAuthorisedStatusCodeWithInvalidJwt() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> httpEntity = new HttpEntity<>("parameters", headers);
+
+        ResponseEntity<List<Authorisation>> responseEntity = testRestTemplate
+            .exchange("/security/authorisation", HttpMethod.GET, httpEntity, new ParameterizedTypeReference<>() {
+            });
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 }

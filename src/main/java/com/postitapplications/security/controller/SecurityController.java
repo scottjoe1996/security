@@ -1,15 +1,14 @@
 package com.postitapplications.security.controller;
 
-import com.postitapplications.security.configuration.JwtProperties;
+import com.postitapplications.security.document.Authorisation;
 import com.postitapplications.security.request.UserRequest;
-import com.postitapplications.security.utility.JwtProvider;
 import com.postitapplications.user.document.User;
 import com.postitapplications.user.utility.UserValidator;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,13 +39,13 @@ public class SecurityController {
         return new ResponseEntity<>(registeredUser.getId().toString(), HttpStatus.CREATED);
     }
 
-    @GetMapping("authorities")
-    public ResponseEntity<GrantedAuthority[]> getAuthorities() {
-        GrantedAuthority[] authorities = (GrantedAuthority[]) SecurityContextHolder.getContext()
-                                                                                         .getAuthentication()
-                                                                                         .getAuthorities()
-                                                                                         .toArray();
-
-        return new ResponseEntity<>(authorities, HttpStatus.OK);
+    @GetMapping("authorisation")
+    public List<Authorisation> getAuthorisations() {
+        return SecurityContextHolder.getContext()
+                                    .getAuthentication()
+                                    .getAuthorities()
+                                    .stream()
+                                    .map(x -> new Authorisation(x.getAuthority()))
+                                    .collect(Collectors.toList());
     }
 }
