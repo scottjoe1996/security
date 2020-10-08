@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import com.postitapplications.exception.exceptions.ExternalServiceException;
 import com.postitapplications.security.request.UserRequest;
 import com.postitapplications.user.document.User;
 import java.util.UUID;
@@ -42,14 +43,14 @@ public class UserDetailsServiceImpTests {
 
     @Test
     public void loadUserByUsernameShouldThrowUserNotAuthorisedException() {
-        when(mockUserRequest.getUserByUsername("fakeUsername123")).thenThrow(new HttpClientErrorException(
-            HttpStatus.NOT_FOUND));
+        when(mockUserRequest.getUserByUsername("fakeUsername123")).thenThrow(new ExternalServiceException(
+            HttpStatus.NOT_FOUND, "user was not found"));
         userDetailsServiceImp = new UserDetailsServiceImp(mockUserRequest);
 
         Exception exception = assertThrows(UsernameNotFoundException.class, () -> {
             userDetailsServiceImp.loadUserByUsername("fakeUsername123");
         });
 
-        assertThat(exception.getMessage()).isEqualTo("fakeUsername123 failed to authorise with error: ");
+        assertThat(exception.getMessage()).isEqualTo("fakeUsername123 failed to authorise with error: user was not found");
     }
 }

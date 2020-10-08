@@ -2,11 +2,9 @@ package com.postitapplications.security.Filter;
 
 import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.security.utility.JwtProvider;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -39,9 +37,13 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
             return;
         }
 
-        UsernamePasswordAuthenticationToken authenticationToken = getAuthenticationToken(header);
+        try {
+            UsernamePasswordAuthenticationToken authToken = getAuthenticationTokenFromHeader(header);
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        } catch (JwtException exception) {
+            throw new IOException("Failed to authorise with error: " + exception.getMessage());
+        }
 
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         chain.doFilter(request, response);
     }
 
@@ -49,7 +51,7 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         return header == null || !header.startsWith(jwtProperties.getPrefix());
     }
 
-    private UsernamePasswordAuthenticationToken getAuthenticationToken(String header) {
+    private UsernamePasswordAuthenticationToken getAuthenticationTokenFromHeader(String header) {
         String token = header.replace(jwtProperties.getPrefix(), "");
 
         String username = jwtProvider.getUsernameFromToken(token);

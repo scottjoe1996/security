@@ -1,5 +1,6 @@
 package com.postitapplications.security.Filter;
 
+import com.postitapplications.exception.exceptions.ExternalServiceException;
 import com.postitapplications.security.document.SecurityUserDetails;
 import com.postitapplications.security.request.UserRequest;
 import com.postitapplications.user.document.User;
@@ -22,10 +23,10 @@ public class UserDetailsServiceImp implements UserDetailsService {
         User user;
         try {
             user = userRequest.getUserByUsername(username);
-        } catch (HttpClientErrorException exception) {
+        } catch (ExternalServiceException exception) {
             throw new UsernameNotFoundException(String
                 .format("%s failed to authorise with error: %s", username,
-                    exception.getResponseBodyAsString()));
+                    exception.getMessage()));
         }
 
         return getUserDetails(user);

@@ -9,8 +9,7 @@ import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.security.document.Authorisation;
 import com.postitapplications.security.request.UserRequest;
 import com.postitapplications.user.document.User;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,8 +26,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -135,23 +132,28 @@ public class SecurityIT {
         HttpEntity<String> httpEntity = new HttpEntity<>("parameters", headers);
 
         ResponseEntity<List<Authorisation>> responseEntity = testRestTemplate
-            .exchange("/security/authorisation", HttpMethod.GET, httpEntity, new ParameterizedTypeReference<>() {
-            });
-        List<Authorisation> authorities = responseEntity.getBody();
+            .exchange("/security/authorisation", HttpMethod.GET, httpEntity,
+                new ParameterizedTypeReference<>() {
+                });
+        List<Authorisation> authorisations = responseEntity.getBody();
 
-        assertThat(authorities.get(0).getAuthorisation()).isEqualTo("ROLE_" + savedUser.getId());
+        assertThat(authorisations.get(0).getAuthorisation()).isEqualTo("ROLE_" + savedUser.getId());
     }
 
     @Test
-    public void getAuthoritiesShouldReturnUnAuthorisedStatusCodeWithInvalidJwt() {
+    public void getAuthoritiesShouldReturnForbiddenStatusCodeWithInvalidJwt() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set(jwtProperties.getHeader(), "");
         HttpEntity<String> httpEntity = new HttpEntity<>("parameters", headers);
 
-        ResponseEntity<List<Authorisation>> responseEntity = testRestTemplate
-            .exchange("/security/authorisation", HttpMethod.GET, httpEntity, new ParameterizedTypeReference<>() {
-            });
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .exchange("/security/authorisation", HttpMethod.GET, httpEntity, String.class);
 
-        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(responseEntity.getBody()).isEqualTo("text");
     }
+
+
 }

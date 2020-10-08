@@ -40,12 +40,14 @@ public class SecurityController {
     }
 
     @GetMapping("authorisation")
-    public List<Authorisation> getAuthorisations() {
-        return SecurityContextHolder.getContext()
-                                    .getAuthentication()
-                                    .getAuthorities()
-                                    .stream()
-                                    .map(x -> new Authorisation(x.getAuthority()))
-                                    .collect(Collectors.toList());
+    public ResponseEntity<List<Authorisation>> getAuthorisations() {
+        List<Authorisation> authorisations = SecurityContextHolder.getContext()
+                                                                  .getAuthentication()
+                                                                  .getAuthorities()
+                                                                  .stream()
+                                                                  .map(x -> new Authorisation(x.getAuthority()))
+                                                                  .collect(Collectors.toList());
+
+        return new ResponseEntity<>(authorisations, HttpStatus.OK);
     }
 }

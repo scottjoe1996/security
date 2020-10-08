@@ -1,10 +1,8 @@
 package com.postitapplications.security.document;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
+import com.fasterxml.jackson.annotation.JsonGetter;
 
 public class Authorisation {
-    @JsonProperty("authorisation")
     private String authorisation;
 
     public Authorisation() {
@@ -14,6 +12,7 @@ public class Authorisation {
         this.authorisation = authorisations;
     }
 
+    @JsonGetter("authorisation")
     public String getAuthorisation() {
         return authorisation;
     }
