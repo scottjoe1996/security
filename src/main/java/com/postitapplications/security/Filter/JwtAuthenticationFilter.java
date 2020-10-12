@@ -1,6 +1,8 @@
 package com.postitapplications.security.Filter;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.postitapplications.exception.exceptions.UserMappingException;
 import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.security.utility.JwtProvider;
 import com.postitapplications.user.document.User;
@@ -46,8 +48,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     private User getUserFromRequest(HttpServletRequest request) {
         try {
             return new ObjectMapper().readValue(request.getInputStream(), User.class);
-        } catch (IOException e) {
-            throw new JsonParseException("Failed to map user object from request");
+        } catch (IOException | JsonParseException exception) {
+            throw new UserMappingException("Failed to map user object from request");
         }
     }
 

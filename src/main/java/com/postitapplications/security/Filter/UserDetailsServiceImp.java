@@ -8,7 +8,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 @Service
 public class UserDetailsServiceImp implements UserDetailsService {
@@ -33,12 +32,12 @@ public class UserDetailsServiceImp implements UserDetailsService {
     }
 
     private SecurityUserDetails getUserDetails(User user) {
-        String[] authorities = getUserAuthorities(user);
+        String[] authorities = getUserAuthorisations(user);
 
         return new SecurityUserDetails(user.getUsername(), user.getPassword(), authorities);
     }
 
-    private String[] getUserAuthorities(User user) {
+    private String[] getUserAuthorisations(User user) {
         return new String[] {"ROLE_" + user.getId().toString()};
     }
 }

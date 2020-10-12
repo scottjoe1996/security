@@ -25,7 +25,7 @@ public class UserRequest {
         this.externalServiceProperties = externalServiceProperties;
     }
 
-    public User getUserByUsername(String username) throws ExternalServiceException {
+    public User getUserByUsername(String username) {
         ResponseEntity<User> response = restTemplate
             .getForEntity(externalServiceProperties.getUserUrl() + "/username/" + username,
                 User.class);
@@ -33,7 +33,7 @@ public class UserRequest {
         return response.getBody();
     }
 
-    public User saveUser(User user) throws ExternalServiceException {
+    public User saveUser(User user) {
         String userServiceUrl = externalServiceProperties.getUserUrl();
         ResponseEntity<User> response = restTemplate
             .postForEntity(userServiceUrl, user, User.class);

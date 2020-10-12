@@ -2,7 +2,6 @@ package com.postitapplications.security.Filter;
 
 import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.security.utility.JwtProvider;
-import io.jsonwebtoken.JwtException;
 import java.io.IOException;
 import java.util.List;
 import javax.servlet.FilterChain;
@@ -37,12 +36,8 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
             return;
         }
 
-        try {
-            UsernamePasswordAuthenticationToken authToken = getAuthenticationTokenFromHeader(header);
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-        } catch (JwtException exception) {
-            throw new IOException("Failed to authorise with error: " + exception.getMessage());
-        }
+        UsernamePasswordAuthenticationToken authToken = getAuthenticationTokenFromHeader(header);
+        SecurityContextHolder.getContext().setAuthentication(authToken);
 
         chain.doFilter(request, response);
     }

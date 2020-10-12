@@ -123,7 +123,7 @@ public class SecurityIT {
     public void getAuthoritiesShouldReturnExpectedAuthoritiesWithValidJwt() {
         when(userRequest.getUserByUsername("johnSmith123")).thenReturn(savedUser);
         ResponseEntity<String> logInResponseEntity = testRestTemplate
-            .postForEntity("/auth", userToSave, String.class);
+            .postForEntity("/security/login", userToSave, String.class);
         String validJwt = logInResponseEntity.getHeaders().get(jwtProperties.getHeader()).get(0);
 
         HttpHeaders headers = new HttpHeaders();
@@ -145,7 +145,7 @@ public class SecurityIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-        headers.set(jwtProperties.getHeader(), "");
+        headers.set(jwtProperties.getHeader(), "Bearer invalidJwt");
         HttpEntity<String> httpEntity = new HttpEntity<>("parameters", headers);
 
         ResponseEntity<String> responseEntity = testRestTemplate
@@ -154,6 +154,4 @@ public class SecurityIT {
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(responseEntity.getBody()).isEqualTo("text");
     }
-
-
 }

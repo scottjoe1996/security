@@ -3,7 +3,7 @@ package com.postitapplications.security.configuration;
 import org.springframework.beans.factory.annotation.Value;
 
 public class JwtProperties {
-    @Value("${security.jwt.uri:/auth/**}")
+    @Value("${security.jwt.uri:/security/login}")
     private String uri;
 
     @Value("${security.jwt.header:Authorization}")

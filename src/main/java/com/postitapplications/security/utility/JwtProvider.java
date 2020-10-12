@@ -2,7 +2,6 @@ package com.postitapplications.security.utility;
 
 import com.postitapplications.security.configuration.JwtProperties;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -60,9 +59,9 @@ public class JwtProvider {
         try {
             return Jwts.parser().setSigningKey(jwtProperties.getSecret().getBytes())
                        .parseClaimsJws(token).getBody();
-        } catch(Exception e) {
+        } catch(JwtException | IllegalArgumentException exception) {
             throw new JwtException(String.format("failed to parse given token with error: %s",
-                e.getMessage()));
+                exception.getMessage()));
         }
     }
 }

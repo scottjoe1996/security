@@ -2,12 +2,12 @@ package com.postitapplications.security.exception;
 
 import com.postitapplications.exception.ExceptionResponseBody;
 import com.postitapplications.exception.exceptions.ExternalServiceException;
-import com.postitapplications.exception.exceptions.NullOrEmptyException;
+import com.postitapplications.exception.exceptions.ValidationException;
+import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @RestControllerAdvice
@@ -22,9 +22,18 @@ public class SecurityExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(exceptionResponseBody, httpStatus);
     }
 
-    @ExceptionHandler(value = {NullOrEmptyException.class, NullPointerException.class})
+    @ExceptionHandler(value = ValidationException.class)
     public ResponseEntity<Object> handleBadRequestException(Exception exception) {
         HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+        ExceptionResponseBody exceptionResponseBody = new ExceptionResponseBody(badRequest,
+            exception.getMessage());
+
+        return new ResponseEntity<>(exceptionResponseBody, badRequest);
+    }
+
+    @ExceptionHandler(value = JwtException.class)
+    public ResponseEntity<Object> handleUnAuthorisedException(Exception exception) {
+        HttpStatus badRequest = HttpStatus.FORBIDDEN;
         ExceptionResponseBody exceptionResponseBody = new ExceptionResponseBody(badRequest,
             exception.getMessage());
 

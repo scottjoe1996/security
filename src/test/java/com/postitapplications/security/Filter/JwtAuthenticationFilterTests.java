@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.postitapplications.exception.exceptions.UserMappingException;
 import com.postitapplications.security.configuration.JwtBeanConfig;
 import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.security.utility.JwtProvider;
@@ -71,13 +72,13 @@ public class JwtAuthenticationFilterTests {
     }
 
     @Test
-    public void attemptAuthenticationShouldThrowJsonParseExceptionWhenRequestBodyIsInvalid() {
+    public void attemptAuthenticationShouldThrowUserMappingExceptionWhenRequestBodyIsInvalid() {
         String invalidBodyString = "invalidBodyString";
         mockRequest.setContent(invalidBodyString.getBytes());
         jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtProperties,
             jwtProvider);
 
-        Exception exception = assertThrows(JsonParseException.class, () -> {
+        Exception exception = assertThrows(UserMappingException.class, () -> {
             jwtAuthenticationFilter.attemptAuthentication(mockRequest, mockResponse);
         });
 
