@@ -71,6 +71,16 @@ public class JwtProviderTests {
     }
 
     @Test
+    public void getUserNameFromTokenShouldThrowJwtExceptionWhenTokenIsEmpty() {
+        Exception exception = assertThrows(JwtException.class, () -> {
+            jwtProvider.getUsernameFromToken("");
+        });
+
+        assertThat(exception.getMessage()).isEqualTo(
+            "failed to parse given token with error: JWT String argument cannot be null or empty.");
+    }
+
+    @Test
     public void getUserNameFromTokenShouldThrowJwtExceptionWhenTokenHasDifferentSigningKey() {
         String testSigningKey = "testSigningKey";
         testToken = Jwts.builder().claim("authorities", Collections.emptyList())
@@ -110,6 +120,16 @@ public class JwtProviderTests {
     public void getAuthoritiesFromTokenShouldThrowJwtExceptionWhenTokenIsNull() {
         Exception exception = assertThrows(JwtException.class, () -> {
             jwtProvider.getAuthoritiesFromToken(null);
+        });
+
+        assertThat(exception.getMessage()).isEqualTo(
+            "failed to parse given token with error: JWT String argument cannot be null or empty.");
+    }
+
+    @Test
+    public void getAuthoritiesFromTokenShouldThrowJwtExceptionWhenTokenIsEmpty() {
+        Exception exception = assertThrows(JwtException.class, () -> {
+            jwtProvider.getAuthoritiesFromToken("");
         });
 
         assertThat(exception.getMessage()).isEqualTo(

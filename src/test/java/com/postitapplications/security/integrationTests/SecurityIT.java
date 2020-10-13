@@ -8,8 +8,12 @@ import com.postitapplications.exception.exceptions.ExternalServiceException;
 import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.security.document.Authorisation;
 import com.postitapplications.security.request.UserRequest;
+import com.postitapplications.security.utility.JwtProvider;
 import com.postitapplications.user.document.User;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +30,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -152,6 +157,98 @@ public class SecurityIT {
             .exchange("/security/authorisation", HttpMethod.GET, httpEntity, String.class);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-        assertThat(responseEntity.getBody()).isEqualTo("text");
+        assertThat(responseEntity.getBody())
+            .contains("JWT strings must contain exactly 2 period characters");
+    }
+
+    @Test
+    public void getAuthoritiesShouldReturnForbiddenStatusCodeWithEmptyJwt() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set(jwtProperties.getHeader(), "Bearer ");
+        HttpEntity<String> httpEntity = new HttpEntity<>("parameters", headers);
+
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .exchange("/security/authorisation", HttpMethod.GET, httpEntity, String.class);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    public void getAuthoritiesShouldReturnForbiddenStatusCodeWithOutDatedJwt() {
+        String expiredToken = Jwts.builder().setSubject("johnSmith123")
+                                  .claim("authorities", Collections.emptyList())
+                                  .setIssuedAt(new Date()).setExpiration(new Date())
+                                  .signWith(SignatureAlgorithm.HS512,
+                                      jwtProperties.getSecret().getBytes()).compact();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set(jwtProperties.getHeader(), "Bearer " + expiredToken);
+        HttpEntity<String> httpEntity = new HttpEntity<>("parameters", headers);
+
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .exchange("/security/authorisation", HttpMethod.GET, httpEntity, String.class);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(responseEntity.getBody()).contains("JWT expired at");
+    }
+
+    @Test
+    public void getAuthoritiesShouldReturnForbiddenStatusCodeWithWrongSigningKey() {
+        String signingKey = "wrongSigningKey";
+        String expiredToken = Jwts.builder().setSubject("johnSmith123")
+                                  .claim("authorities", Collections.emptyList())
+                                  .setIssuedAt(new Date()).setExpiration(new Date())
+                                  .signWith(SignatureAlgorithm.HS512, signingKey.getBytes())
+                                  .compact();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set(jwtProperties.getHeader(), "Bearer " + expiredToken);
+        HttpEntity<String> httpEntity = new HttpEntity<>("parameters", headers);
+
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .exchange("/security/authorisation", HttpMethod.GET, httpEntity, String.class);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(responseEntity.getBody()).contains(
+            "JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.");
+    }
+
+    @Test
+    public void loginEndpointShouldReturnOKStatusCodeWhenUsernameAndPasswordMatch() {
+        when(userRequest.getUserByUsername("johnSmith123")).thenReturn(savedUser);
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .postForEntity("/security/login", userToSave, String.class);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void loginEndpointShouldAddExpectedTokenToResponseHeader() {
+        JwtProvider jwtProvider = new JwtProvider(jwtProperties);
+        when(userRequest.getUserByUsername("johnSmith123")).thenReturn(savedUser);
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .postForEntity("/security/login", userToSave, String.class);
+        String header = responseEntity.getHeaders().get(jwtProperties.getHeader()).get(0);
+        String token = header.replace(jwtProperties.getPrefix(), "");
+
+        String username = jwtProvider.getUsernameFromToken(token);
+        List<SimpleGrantedAuthority> authorities = jwtProvider.getAuthoritiesFromToken(token);
+
+        assertThat(username).isEqualTo("johnSmith123");
+        assertThat(authorities.get(0).getAuthority()).isEqualTo("ROLE_" + savedUser.getId());
+    }
+
+    @Test
+    public void loginEndpointShouldReturnUnAuthorisedStatusCodeWhenUsernameHasNoMatch() {
+        when(userRequest.getUserByUsername("johnSmith123"))
+            .thenThrow(new ExternalServiceException(HttpStatus.NOT_FOUND, "User was not found"));
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .postForEntity("/security/login", userToSave, String.class);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 }

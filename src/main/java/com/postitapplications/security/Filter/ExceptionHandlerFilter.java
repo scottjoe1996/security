@@ -1,6 +1,5 @@
 package com.postitapplications.security.Filter;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.postitapplications.exception.exceptions.UserMappingException;
 import io.jsonwebtoken.JwtException;
 import java.io.IOException;
@@ -8,6 +7,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 

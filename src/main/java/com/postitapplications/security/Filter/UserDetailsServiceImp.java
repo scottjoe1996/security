@@ -24,17 +24,16 @@ public class UserDetailsServiceImp implements UserDetailsService {
             user = userRequest.getUserByUsername(username);
         } catch (ExternalServiceException exception) {
             throw new UsernameNotFoundException(String
-                .format("%s failed to authorise with error: %s", username,
-                    exception.getMessage()));
+                .format("%s failed to authorise with error: %s", username, exception.getMessage()));
         }
 
         return getUserDetails(user);
     }
 
     private SecurityUserDetails getUserDetails(User user) {
-        String[] authorities = getUserAuthorisations(user);
+        String[] authorisations = getUserAuthorisations(user);
 
-        return new SecurityUserDetails(user.getUsername(), user.getPassword(), authorities);
+        return new SecurityUserDetails(user.getUsername(), user.getPassword(), authorisations);
     }
 
     private String[] getUserAuthorisations(User user) {

@@ -2,10 +2,13 @@ package com.postitapplications.security.exception;
 
 import com.postitapplications.exception.ExceptionResponseBody;
 import com.postitapplications.exception.exceptions.ExternalServiceException;
+import com.postitapplications.exception.exceptions.UserNotFoundException;
 import com.postitapplications.exception.exceptions.ValidationException;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -32,11 +35,20 @@ public class SecurityExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(value = JwtException.class)
-    public ResponseEntity<Object> handleUnAuthorisedException(Exception exception) {
+    public ResponseEntity<Object> handleForbiddenException(Exception exception) {
         HttpStatus badRequest = HttpStatus.FORBIDDEN;
         ExceptionResponseBody exceptionResponseBody = new ExceptionResponseBody(badRequest,
             exception.getMessage());
 
         return new ResponseEntity<>(exceptionResponseBody, badRequest);
+    }
+
+    @ExceptionHandler(value = BadCredentialsException.class)
+    public ResponseEntity<Object> handleUnAuthorisedException(BadCredentialsException exception) {
+        HttpStatus unauthorized = HttpStatus.UNAUTHORIZED;
+        ExceptionResponseBody exceptionResponseBody = new ExceptionResponseBody(unauthorized,
+            exception.getMessage());
+
+        return new ResponseEntity<>(exceptionResponseBody, unauthorized);
     }
 }
