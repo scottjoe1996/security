@@ -48,10 +48,11 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
     private UsernamePasswordAuthenticationToken getAuthenticationTokenFromHeader(String header) {
         String token = header.replace(jwtProperties.getPrefix(), "");
-
         String username = jwtProvider.getUsernameFromToken(token);
         List<SimpleGrantedAuthority> authorities = jwtProvider.getAuthoritiesFromToken(token);
 
         return new UsernamePasswordAuthenticationToken(username, null, authorities);
     }
+
+
 }

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.postitapplications.exception.ExceptionResponseBody;
 import com.postitapplications.exception.exceptions.ExternalServiceException;
 import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.security.document.Authorisation;
@@ -250,5 +251,13 @@ public class SecurityIT {
         ResponseEntity<String> responseEntity = testRestTemplate
             .postForEntity("/security/login", userToSave, String.class);
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(responseEntity.getBody()).contains("Bad credentials");
+    }
+
+    @Test
+    public void loginEndpointShouldReturnBadRequestStatusCodeWhenRequestBodyIsNotAUserObject() {
+        ResponseEntity<String> responseEntity = testRestTemplate.postForEntity("/security/login",
+            new ExceptionResponseBody(HttpStatus.NOT_FOUND, "test"), String.class);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 }

@@ -7,7 +7,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
@@ -25,7 +25,7 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
         throws ServletException, IOException {
         try {
             filterChain.doFilter(httpServletRequest, httpServletResponse);
-        } catch (JwtException | UserMappingException exception) {
+        } catch (JwtException | UserMappingException | AuthenticationException exception) {
             handlerExceptionResolver.resolveException(httpServletRequest, httpServletResponse,
                 null, exception);
         }
