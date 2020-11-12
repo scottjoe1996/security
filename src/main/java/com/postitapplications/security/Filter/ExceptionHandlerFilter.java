@@ -25,7 +25,7 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
         throws ServletException, IOException {
         try {
             filterChain.doFilter(httpServletRequest, httpServletResponse);
-        } catch (JwtException | UserMappingException | AuthenticationException exception) {
+        } catch (JwtException | UserMappingException | AuthenticationException  exception) {
             handlerExceptionResolver.resolveException(httpServletRequest, httpServletResponse,
                 null, exception);
         }

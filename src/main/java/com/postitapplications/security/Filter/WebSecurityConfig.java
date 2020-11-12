@@ -1,10 +1,12 @@
 package com.postitapplications.security.Filter;
 
-import com.google.common.collect.ImmutableList;
 import com.postitapplications.security.configuration.JwtProperties;
 import com.postitapplications.security.utility.JwtProvider;
+import java.util.Arrays;
+import java.util.Collections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -16,7 +18,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -61,18 +62,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        final CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(ImmutableList.of("*"));
-        configuration.setAllowedMethods(ImmutableList.of("HEAD",
-            "GET", "POST", "PUT", "DELETE", "PATCH"));
-        // setAllowCredentials(true) is important, otherwise:
-        // The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'.
-        configuration.setAllowCredentials(true);
-        // setAllowedHeaders is important! Without it, OPTIONS preflight request
-        // will fail with 403 Invalid CORS request
-        configuration.setAllowedHeaders(ImmutableList.of("Authorization", "Cache-Control", "Content-Type"));
-        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedHeaders(Collections.singletonList("*"));
+        config.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+        config.setAllowedMethods(Arrays.asList("GET","POST"));
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }
