@@ -33,6 +33,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.client.ResourceAccessException;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class SecurityIT {
@@ -252,6 +253,16 @@ public class SecurityIT {
             .postForEntity("/security/login", userToSave, String.class);
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         assertThat(responseEntity.getBody()).contains("Bad credentials");
+    }
+
+    @Test
+    public void loginEndpointShouldReturnInternalServerErrorStatusCodeWhenUserServiceIsNotAvailable() {
+        when(userRequest.getUserByUsername("johnSmith123"))
+            .thenThrow(new ResourceAccessException("Service not available"));
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .postForEntity("/security/login", userToSave, String.class);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(responseEntity.getBody()).contains("Service not available");
     }
 
     @Test
