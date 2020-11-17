@@ -18,10 +18,8 @@ public class SecurityExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(value = ExternalServiceException.class)
     public ResponseEntity<Object> handleExternalServiceException(ExternalServiceException exception) {
         HttpStatus httpStatus = exception.getStatusCode();
-        ExceptionResponseBody exceptionResponseBody = new ExceptionResponseBody(httpStatus,
-            exception.getMessage());
 
-        return new ResponseEntity<>(exceptionResponseBody, httpStatus);
+        return new ResponseEntity<>(exception.getResponseAsString(), httpStatus);
     }
 
     @ExceptionHandler(value = ValidationException.class)

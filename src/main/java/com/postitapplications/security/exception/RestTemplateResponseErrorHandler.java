@@ -4,7 +4,11 @@ import static org.springframework.http.HttpStatus.Series.CLIENT_ERROR;
 import static org.springframework.http.HttpStatus.Series.SERVER_ERROR;
 
 import com.postitapplications.exception.exceptions.ExternalServiceException;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.ResponseErrorHandler;
@@ -19,8 +23,14 @@ public class RestTemplateResponseErrorHandler implements ResponseErrorHandler {
     @Override
     public void handleError(ClientHttpResponse clientHttpResponse) throws IOException {
         if (isErrorResponseStatus(clientHttpResponse.getStatusCode())) {
+
+            String responseAsString = new BufferedReader(
+                new InputStreamReader(clientHttpResponse.getBody(), StandardCharsets.UTF_8)).lines()
+                                                                                            .collect(
+                                                                                                Collectors
+                                                                                                    .joining());
             throw new ExternalServiceException(clientHttpResponse.getStatusCode(),
-                clientHttpResponse.getBody().toString());
+                clientHttpResponse.getStatusText(), responseAsString);
         }
     }
 

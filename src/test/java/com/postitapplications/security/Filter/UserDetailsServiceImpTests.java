@@ -43,7 +43,7 @@ public class UserDetailsServiceImpTests {
     @Test
     public void loadUserByUsernameShouldThrowUserNotAuthorisedException() {
         when(mockUserRequest.getUserByUsername("fakeUsername123")).thenThrow(new ExternalServiceException(
-            HttpStatus.NOT_FOUND, "user was not found"));
+            HttpStatus.NOT_FOUND, "user was not found", ""));
         userDetailsServiceImp = new UserDetailsServiceImp(mockUserRequest);
 
         Exception exception = assertThrows(UsernameNotFoundException.class, () -> {

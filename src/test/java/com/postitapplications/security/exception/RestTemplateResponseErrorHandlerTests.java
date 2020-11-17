@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.postitapplications.exception.exceptions.ExternalServiceException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 class RestTemplateResponseErrorHandlerTests {
+    JSONObject mockResponse = new JSONObject();
 
     @Test
     public void hasErrorShouldReturnTrueIfHttpResponseHas4XXStatusCode() throws IOException {
@@ -55,8 +58,8 @@ class RestTemplateResponseErrorHandlerTests {
     @Test
     public void handleErrorShouldThrowExternalServiceExceptionWithNotFoundStatusCode() {
         RestTemplateResponseErrorHandler errorHandler = new RestTemplateResponseErrorHandler();
-        ClientHttpResponse clientHttpResponse = new MockClientHttpResponse(new byte[0],
-            HttpStatus.NOT_FOUND);
+        ClientHttpResponse clientHttpResponse = new MockClientHttpResponse(
+            mockResponse.toString().getBytes(StandardCharsets.UTF_8), HttpStatus.NOT_FOUND);
 
         ExternalServiceException exception = assertThrows(ExternalServiceException.class, () -> {
             errorHandler.handleError(clientHttpResponse);
@@ -68,8 +71,8 @@ class RestTemplateResponseErrorHandlerTests {
     @Test
     public void handleErrorShouldThrowExternalServiceExceptionWithBadGatewayStatusCode() {
         RestTemplateResponseErrorHandler errorHandler = new RestTemplateResponseErrorHandler();
-        ClientHttpResponse clientHttpResponse = new MockClientHttpResponse(new byte[0],
-            HttpStatus.BAD_GATEWAY);
+        ClientHttpResponse clientHttpResponse = new MockClientHttpResponse(
+            mockResponse.toString().getBytes(StandardCharsets.UTF_8), HttpStatus.BAD_GATEWAY);
 
         ExternalServiceException exception = assertThrows(ExternalServiceException.class, () -> {
             errorHandler.handleError(clientHttpResponse);
