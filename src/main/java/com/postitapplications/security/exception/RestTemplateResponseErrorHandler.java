@@ -3,10 +3,12 @@ package com.postitapplications.security.exception;
 import static org.springframework.http.HttpStatus.Series.CLIENT_ERROR;
 import static org.springframework.http.HttpStatus.Series.SERVER_ERROR;
 
+import com.postitapplications.exception.ExceptionResponseBody;
 import com.postitapplications.exception.exceptions.ExternalServiceException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -23,14 +25,17 @@ public class RestTemplateResponseErrorHandler implements ResponseErrorHandler {
     @Override
     public void handleError(ClientHttpResponse clientHttpResponse) throws IOException {
         if (isErrorResponseStatus(clientHttpResponse.getStatusCode())) {
+            try {
+                ObjectInputStream ois = new ObjectInputStream(clientHttpResponse.getBody());
+                ExceptionResponseBody responseBody = (ExceptionResponseBody) ois.readObject();
 
-            String responseAsString = new BufferedReader(
-                new InputStreamReader(clientHttpResponse.getBody(), StandardCharsets.UTF_8)).lines()
-                                                                                            .collect(
-                                                                                                Collectors
-                                                                                                    .joining());
-            throw new ExternalServiceException(clientHttpResponse.getStatusCode(),
-                clientHttpResponse.getStatusText(), responseAsString);
+                throw new ExternalServiceException(clientHttpResponse.getStatusCode(),
+                    clientHttpResponse.getStatusText(), responseBody);
+
+            } catch (ClassNotFoundException | IOException exception) {
+                throw new ExternalServiceException(clientHttpResponse.getStatusCode(),
+                    clientHttpResponse.getStatusText());
+            }
         }
     }
 
