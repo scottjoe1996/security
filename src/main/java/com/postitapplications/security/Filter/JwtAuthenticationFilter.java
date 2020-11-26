@@ -3,6 +3,7 @@ package com.postitapplications.security.Filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.postitapplications.exception.exceptions.UserMappingException;
 import com.postitapplications.security.configuration.JwtProperties;
+import com.postitapplications.security.exception.RestAuthenticationFailureHandler;
 import com.postitapplications.security.utility.JwtProvider;
 import com.postitapplications.user.document.User;
 import java.io.IOException;
@@ -33,6 +34,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         this.jwtProvider = jwtProvider;
         this.setRequiresAuthenticationRequestMatcher(
             new AntPathRequestMatcher(jwtProperties.getUri(), "POST"));
+        this.setAuthenticationFailureHandler(new RestAuthenticationFailureHandler());
     }
 
     @Override
@@ -62,11 +64,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         response.addHeader(jwtProperties.getHeader(), jwtProperties.getPrefix() + token);
     }
 
-    @Override
-    protected void unsuccessfulAuthentication(HttpServletRequest request,
-        HttpServletResponse response, AuthenticationException failed)
-        throws IOException, ServletException {
-        SecurityContextHolder.clearContext();
-        throw failed;
-    }
+//    @Override
+//    protected void unsuccessfulAuthentication(HttpServletRequest request,
+//        HttpServletResponse response, AuthenticationException failed)
+//        throws IOException, ServletException {
+//        SecurityContextHolder.clearContext();
+//        throw failed;
+//    }
 }

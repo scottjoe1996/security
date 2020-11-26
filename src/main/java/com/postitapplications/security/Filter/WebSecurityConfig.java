@@ -1,11 +1,14 @@
 package com.postitapplications.security.Filter;
 
 import com.postitapplications.security.configuration.JwtProperties;
+import com.postitapplications.security.exception.RestAuthenticationFailureHandler;
 import com.postitapplications.security.utility.JwtProvider;
 import java.util.Arrays;
 import java.util.Collections;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -57,7 +60,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
+        auth.authenticationProvider(daoAuthenticationProvider());
     }
 
     @Bean
@@ -69,5 +72,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         config.setAllowedMethods(Arrays.asList("GET","POST"));
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    @Bean
+    public AuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+        daoAuthenticationProvider.setUserDetailsService(userDetailsService);
+        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
+        daoAuthenticationProvider.setHideUserNotFoundExceptions(false);
+        return daoAuthenticationProvider;
     }
 }
