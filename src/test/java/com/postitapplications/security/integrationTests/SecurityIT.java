@@ -252,7 +252,7 @@ public class SecurityIT {
         ResponseEntity<String> responseEntity = testRestTemplate
             .postForEntity("/security/login", userToSave, String.class);
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        assertThat(responseEntity.getBody()).contains("Bad credentials");
+        assertThat(responseEntity.getBody()).contains("User was not found");
     }
 
     @Test
