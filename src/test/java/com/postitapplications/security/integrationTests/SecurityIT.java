@@ -266,6 +266,16 @@ public class SecurityIT {
     }
 
     @Test
+    public void loginEndpointShouldReturnUnAuthorisedStatusCodeWhenUserPasswordDoesNotMatch() {
+        User userWithInvalidPassword = new User(UUID.randomUUID(), "johnSmith123", "wrongPassword");
+        when(userRequest.getUserByUsername("johnSmith123")).thenReturn(savedUser);
+        ResponseEntity<String> responseEntity = testRestTemplate
+            .postForEntity("/security/login", userWithInvalidPassword, String.class);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(responseEntity.getBody()).contains("Bad Credentials");
+    }
+
+    @Test
     public void loginEndpointShouldReturnBadRequestStatusCodeWhenRequestBodyIsNotAUserObject() {
         ResponseEntity<String> responseEntity = testRestTemplate.postForEntity("/security/login",
             new ExceptionResponseBody(HttpStatus.NOT_FOUND, "test"), String.class);
